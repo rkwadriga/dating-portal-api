@@ -1,0 +1,5 @@
+CREATE DATABASE IF NOT EXISTS dating_db;
+CREATE DATABASE IF NOT EXISTS dating_db_test;
+
+CREATE USER 'admin'@'localhost' IDENTIFIED BY 'admin';
+GRANT ALL PRIVILEGES ON *.* TO 'admin'@'%';
