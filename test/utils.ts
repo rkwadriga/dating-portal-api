@@ -4,7 +4,7 @@ import * as path from "path";
 import * as sendRequest from 'supertest';
 import { Connection } from "typeorm";
 import { ApiRouter, RoutesUrls, HttpMethods } from "../src/api/api.router";
-import supertest, {Response} from "supertest";
+import supertest, {Response, Test} from "supertest";
 
 const logger = new Logger('e2e');
 const router = new ApiRouter();

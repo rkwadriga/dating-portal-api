@@ -14,6 +14,14 @@ let connection: Connection;
 const loadFixtures = async (sqlFileName: string) =>
     loadFixturesBase(connection, sqlFileName);
 
+const userData = {
+    email: 'user1@mail.com',
+    password: 'test',
+    retypedPassword: 'test',
+    firstName: 'User',
+    lastName: 'First'
+};
+
 describe('Auth (e2e) ', function () {
     beforeEach(async () => {
         mod = await Test.createTestingModule({
@@ -33,15 +41,22 @@ describe('Auth (e2e) ', function () {
     });
 
     it('Should return a new user with a correct token', async () => {
-        return await send(app.getHttpServer(), RoutesUrls.AUTH_REGISTRATION, {
-                "email": "user3@mail.com",
-                "password": "test",
-                "retypedPassword": "test",
-                "firstName": "User",
-                "lastName": "Third"
-            })
+        return send(app.getHttpServer(), RoutesUrls.AUTH_REGISTRATION, userData)
             .then(response => {
-                console.log(response.statusCode, response.body, response.error);
+                expect(response.statusCode).toBe(201);
+                expect(response.body.id).toBeDefined();
+                expect(response.body.id).toBe(1);
+                expect(response.body.email).toBeDefined();
+                expect(response.body.email).toBe(userData.email);
+                expect(response.body.firstName).toBeDefined();
+                expect(response.body.firstName).toBe(userData.firstName);
+                expect(response.body.lastName).toBeDefined();
+                expect(response.body.lastName).toBe(userData.lastName);
+                expect(response.body.password).toBeUndefined();
+                expect(response.body.retypedPassword).toBeUndefined();
+                expect(response.body.token).toBeDefined();
+                expect(response.body.token.length).toBeDefined();
+                expect(response.body.token.length).toBeGreaterThanOrEqual(100);
             });
     });
 });
