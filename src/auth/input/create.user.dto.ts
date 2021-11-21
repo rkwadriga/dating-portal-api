@@ -11,6 +11,11 @@ export class CreateUserDto {
     password: string;
 
     @IsString()
+    @Length(4, 255)
+    @IsNotEmpty()
+    retypedPassword: string;
+
+    @IsString()
     @Length(2, 64)
     @IsOptional()
     firstName: string;
