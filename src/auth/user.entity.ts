@@ -1,4 +1,4 @@
-import {Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn, Unique} from "typeorm";
+import {Column, Entity, PrimaryGeneratedColumn} from "typeorm";
 import {Expose} from "class-transformer";
 
 @Entity()

@@ -6,16 +6,16 @@ import {
     Post,
     SerializeOptions,
     UseGuards,
-    UseInterceptors
+    UseInterceptors,
+    ValidationPipe
 } from "@nestjs/common";
-
-
+import {CreateUserDto} from "./input/create.user.dto";
 
 @Controller('/api/auth')
 export class AuthController {
 
     @Post('/registration')
-    async registration(@Body() input: any) {
+    async registration(@Body() input: CreateUserDto) {
         console.log(input);
     }
 }
