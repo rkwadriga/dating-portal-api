@@ -1,4 +1,4 @@
-import {BadRequestException, Injectable} from "@nestjs/common";
+import {BadRequestException, HttpException, HttpStatus, Injectable} from "@nestjs/common";
 import {JwtService} from "@nestjs/jwt";
 import {InjectRepository} from "@nestjs/typeorm";
 import {User} from "./user.entity";
@@ -17,6 +17,8 @@ export class AuthService {
 
     public async createUser(input: CreateUserDto): Promise<User> {
         let errors: Array<string> = [];
+        let status = HttpStatus.UNPROCESSABLE_ENTITY;
+        let error = 'Unprocessable entity';
 
         // Check the "retype password" field
         if (input.password !== input.retypedPassword) {
@@ -27,11 +29,17 @@ export class AuthService {
         const existingUser = await this.userRepository.findOne({email: input.email});
         if (existingUser) {
             errors.push('This email is already registered');
+            status = HttpStatus.CONFLICT;
+            error = 'Conflict';
         }
 
         // If there is some errors - throw an 400 error
         if (errors.length > 0) {
-            throw new BadRequestException(errors);
+            throw new HttpException({
+                status,
+                error,
+                message: errors
+            }, status)
         }
 
         return await this.userRepository.save({

@@ -33,7 +33,7 @@ export const send = async (httpServer: any, route: RoutesUrls|[RoutesUrls, {}], 
 
     const logMessage = `Make request ${request.method} ${request.uri}`;
     logger.debug(logMessage);
-    console.log(logMessage);
+    //console.log(logMessage);
 
     switch (request.method) {
         case HttpMethods.GET:
