@@ -24,23 +24,42 @@ export const send = async (httpServer: any, route: RoutesUrls|[RoutesUrls, {}], 
         [route, routeParams] = route;
     }
 
+    let result;
     const request = router.createRequest(route, routeParams);
-    const result = sendRequest(httpServer);
+    const httpRequest = sendRequest(httpServer);
+    const token = params['token'] ?? null;
 
-    const logMessage = `Make request ${request.method} ${request.uri}`;
+    let logMessage = `Make request ${request.method} ${request.uri}`;
     logger.debug(logMessage);
     //console.log(logMessage);
 
     switch (request.method) {
         case HttpMethods.GET:
-            return result.get(request.uri).send(params);
+            result = httpRequest.get(request.uri);
+            break;
         case HttpMethods.POST:
-            return result.post(request.uri).send(params);
+            result = httpRequest.post(request.uri);
+            break;
         case HttpMethods.PUT:
-            return result.put(request.uri).send(params);
+            result = httpRequest.put(request.uri);
+            break;
         case HttpMethods.PATCH:
-            return result.patch(request.uri).send(params);
+            result = httpRequest.patch(request.uri);
+            break;
         case HttpMethods.DELETE:
-            return result.delete(request.uri).send();
+            result = httpRequest.delete(request.uri);
+            break;
     }
+
+    if (token !== null) {
+        logMessage = `Set token: ${token}`;
+        logger.debug(logMessage);
+        //console.log(logMessage);
+        result.set('Authorization', `Bearer ${token}`)
+    }
+    return result.send(params);
+}
+
+export const login = async (httpServer: any, username = 'user1@mail.com', password = 'test'): Promise<string> => {
+    return await send(httpServer, RoutesUrls.AUTH_LOGIN, {username, password}).then(response => response.body.token);
 }

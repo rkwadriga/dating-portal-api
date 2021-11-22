@@ -36,6 +36,7 @@ const testAuthData = (response: supertest.Response) => {
     expect(response.body.token.length).toBeGreaterThanOrEqual(100);
 };
 
+// npm run test:e2e -i auth.e2e-spec.ts
 describe('Auth (e2e)', function () {
     beforeEach(async () => {
         mod = await Test.createTestingModule({
@@ -46,7 +47,6 @@ describe('Auth (e2e)', function () {
         app.useGlobalPipes(new ValidationPipe());
 
         await app.init();
-
         connection = app.get(Connection);
     });
 
