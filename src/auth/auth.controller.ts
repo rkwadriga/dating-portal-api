@@ -13,7 +13,7 @@ import {
 import {CreateUserDto} from "./input/create.user.dto";
 import {AuthService} from "./auth.service";
 import {UserEntityDto} from "./output/user.entity.dto";
-import {AuthGuardLocal} from "./guards/auth-guard.local";
+import {AuthGuardLocal} from "../guards/auth-guard.local";
 import {CurrentUser} from "./current-user.decorator";
 import {User} from "./user.entity";
 

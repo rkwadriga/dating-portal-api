@@ -5,6 +5,7 @@ import {AppController} from './app.controller';
 import {AppService} from './app.service';
 import ormConfig from './config/orm.config';
 import {AuthModule} from "./auth/auth.module";
+import {ProfileModule} from "./profile/profile.module";
 
 @Module({
     imports: [
@@ -15,7 +16,8 @@ import {AuthModule} from "./auth/auth.module";
             envFilePath: `.env.${process.env.NODE_ENV}` // This variable is set in package.json file (scripts.start:dev section for example)
         }),
         TypeOrmModule.forRootAsync({useFactory: ormConfig}),
-        AuthModule
+        AuthModule,
+        ProfileModule
     ],
     controllers: [AppController],
     providers: [AppService],
