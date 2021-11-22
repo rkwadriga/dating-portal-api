@@ -9,7 +9,7 @@ export enum HttpMethods {
 
 export enum RoutesUrls {
     AUTH_REGISTRATION = 'POST /auth/registration',
-
+    AUTH_LOGIN = 'POST /auth/login',
     PROFILE_EDIT = 'PATCH /profile/:id/:name/edit'
 }
 

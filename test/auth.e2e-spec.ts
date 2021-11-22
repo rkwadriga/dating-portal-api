@@ -1,10 +1,11 @@
 import {HttpStatus, INestApplication, ValidationPipe} from "@nestjs/common";
-import { Test, TestingModule } from "@nestjs/testing";
-import { Connection } from "typeorm";
-import { AppModule } from "../src/app.module";
-import { User } from "../src/auth/user.entity";
-import { loadFixtures, send } from "./utils";
-import { RoutesUrls } from "../src/api/api.router";
+import {Test, TestingModule} from "@nestjs/testing";
+import {Connection} from "typeorm";
+import {AppModule} from "../src/app.module";
+import {User} from "../src/auth/user.entity";
+import {loadFixtures, send} from "./utils";
+import {RoutesUrls} from "../src/api/api.router";
+import supertest from "supertest";
 
 let app: INestApplication;
 let mod: TestingModule;
@@ -18,7 +19,24 @@ const userData = {
     lastName: 'First'
 };
 
-describe('Auth (e2e) ', function () {
+const testAuthData = (response: supertest.Response) => {
+    expect(response.statusCode).toBe(HttpStatus.CREATED);
+    expect(response.body.id).toBeDefined();
+    expect(response.body.id).toBe(1);
+    expect(response.body.email).toBeDefined();
+    expect(response.body.email).toBe(userData.email);
+    expect(response.body.firstName).toBeDefined();
+    expect(response.body.firstName).toBe(userData.firstName);
+    expect(response.body.lastName).toBeDefined();
+    expect(response.body.lastName).toBe(userData.lastName);
+    expect(response.body.password).toBeUndefined();
+    expect(response.body.retypedPassword).toBeUndefined();
+    expect(response.body.token).toBeDefined();
+    expect(response.body.token.length).toBeDefined();
+    expect(response.body.token.length).toBeGreaterThanOrEqual(100);
+};
+
+describe('Auth (e2e)', function () {
     beforeEach(async () => {
         mod = await Test.createTestingModule({
             imports: [AppModule],
@@ -40,20 +58,7 @@ describe('Auth (e2e) ', function () {
         it('Should return a new user with a correct token', async () => {
             return send(app.getHttpServer(), RoutesUrls.AUTH_REGISTRATION, userData)
                 .then(response => {
-                    expect(response.statusCode).toBe(HttpStatus.CREATED);
-                    expect(response.body.id).toBeDefined();
-                    expect(response.body.id).toBe(1);
-                    expect(response.body.email).toBeDefined();
-                    expect(response.body.email).toBe(userData.email);
-                    expect(response.body.firstName).toBeDefined();
-                    expect(response.body.firstName).toBe(userData.firstName);
-                    expect(response.body.lastName).toBeDefined();
-                    expect(response.body.lastName).toBe(userData.lastName);
-                    expect(response.body.password).toBeUndefined();
-                    expect(response.body.retypedPassword).toBeUndefined();
-                    expect(response.body.token).toBeDefined();
-                    expect(response.body.token.length).toBeDefined();
-                    expect(response.body.token.length).toBeGreaterThanOrEqual(100);
+                    testAuthData(response);
                 });
         });
     });
@@ -231,7 +236,48 @@ describe('Auth (e2e) ', function () {
                     expect(typeof response.body.message).toBe('object');
                     expect(response.body.message.length).toBe(1);
                     expect(response.body.error).toBeDefined();
-                })
+                });
+        });
+    });
+
+    describe('Successful login', () => {
+        const loginData = {username: userData.email, password: userData.password};
+
+        it('Should return user ingo with token', async () => {
+            await loadFixtures(connection, '1-user.sql');
+
+            return send(app.getHttpServer(), RoutesUrls.AUTH_LOGIN, loginData)
+                .then(response => {
+                    testAuthData(response);
+                });
+        });
+    });
+
+    describe('Unsuccessful login', () => {
+        const loginData = {username: userData.email, password: userData.password};
+
+        it('Should return status 401 on incorrect login', async () => {
+            await loadFixtures(connection, '1-user.sql');
+            const invalidData = {...loginData, username: 'invalid_user@mail.com'};
+
+            return send(app.getHttpServer(), RoutesUrls.AUTH_LOGIN, invalidData)
+                .then(response => {
+                    expect(response.statusCode).toBe(HttpStatus.UNAUTHORIZED);
+                    expect(response.body.message).toBeDefined();
+                    expect(typeof response.body.message).toBe('string');
+                });
+        });
+
+        it('Should return status 401 on incorrect password', async () => {
+            await loadFixtures(connection, '1-user.sql');
+            const invalidData = {...loginData, password: 'invalid_password'};
+
+            return send(app.getHttpServer(), RoutesUrls.AUTH_LOGIN, invalidData)
+                .then(response => {
+                    expect(response.statusCode).toBe(HttpStatus.UNAUTHORIZED);
+                    expect(response.body.message).toBeDefined();
+                    expect(typeof response.body.message).toBe('string');
+                });
         });
     });
 });

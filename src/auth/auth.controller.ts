@@ -36,6 +36,7 @@ export class AuthController {
 
     @Post('/login')
     @UseGuards(AuthGuardLocal)
+    @UseInterceptors(ClassSerializerInterceptor)
     async login(@CurrentUser() user: User) {
         return new UserEntityDto(
             user,
