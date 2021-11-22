@@ -13,6 +13,9 @@ import {
 import {CreateUserDto} from "./input/create.user.dto";
 import {AuthService} from "./auth.service";
 import {UserEntityDto} from "./output/user.entity.dto";
+import {AuthGuardLocal} from "./guards/auth-guard.local";
+import {CurrentUser} from "./current-user.decorator";
+import {User} from "./user.entity";
 
 @Controller('/api/auth')
 @SerializeOptions({strategy: 'excludeAll'})
@@ -25,6 +28,15 @@ export class AuthController {
     @UseInterceptors(ClassSerializerInterceptor)
     async registration(@Body() input: CreateUserDto) {
         const user = await this.authService.createUser(input);
+        return new UserEntityDto(
+            user,
+            this.authService.getTokenForUser(user)
+        );
+    }
+
+    @Post('/login')
+    @UseGuards(AuthGuardLocal)
+    async login(@CurrentUser() user: User) {
         return new UserEntityDto(
             user,
             this.authService.getTokenForUser(user)
