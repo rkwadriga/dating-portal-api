@@ -3,17 +3,12 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { Connection } from "typeorm";
 import { AppModule } from "../src/app.module";
 import { User } from "../src/auth/user.entity";
-import { loadFixtures as loadFixturesBase, send } from "./utils";
+import { loadFixtures, send } from "./utils";
 import { RoutesUrls } from "../src/api/api.router";
-import {type} from "os";
-import exp from "constants";
 
 let app: INestApplication;
 let mod: TestingModule;
 let connection: Connection;
-
-const loadFixtures = async (sqlFileName: string) =>
-    loadFixturesBase(connection, sqlFileName);
 
 const userData = {
     email: 'user1@mail.com',
@@ -220,26 +215,23 @@ describe('Auth (e2e) ', function () {
         });
 
         it('Should return 409 status on trying register user with existed email', async () => {
-            return send(app.getHttpServer(), RoutesUrls.AUTH_REGISTRATION, userData)
-                .then(response => {
-                    expect(response.statusCode).toBe(HttpStatus.CREATED);
+            loadFixtures(connection, '1-user.sql');
 
-                    const newUserData = {
-                        email: userData.email,
-                        password: 'new_password',
-                        retypedPassword: 'new_password',
-                        firstName: 'NewUser',
-                        lastName: 'NewFirst'
-                    }
-                    return send(app.getHttpServer(), RoutesUrls.AUTH_REGISTRATION, newUserData)
-                        .then(response => {
-                            expect(response.statusCode).toBe(HttpStatus.CONFLICT);
-                            expect(response.body.message).toBeDefined();
-                            expect(typeof response.body.message).toBe('object');
-                            expect(response.body.message.length).toBe(1);
-                            expect(response.body.error).toBeDefined();
-                        })
-                });
+            const newUserData = {
+                email: userData.email,
+                password: 'new_password',
+                retypedPassword: 'new_password',
+                firstName: 'NewUser',
+                lastName: 'NewFirst'
+            }
+            return send(app.getHttpServer(), RoutesUrls.AUTH_REGISTRATION, newUserData)
+                .then(response => {
+                    expect(response.statusCode).toBe(HttpStatus.CONFLICT);
+                    expect(response.body.message).toBeDefined();
+                    expect(typeof response.body.message).toBe('object');
+                    expect(response.body.message.length).toBe(1);
+                    expect(response.body.error).toBeDefined();
+                })
         });
     });
 });
