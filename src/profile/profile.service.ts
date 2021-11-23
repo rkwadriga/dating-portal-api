@@ -4,6 +4,7 @@ import {Repository} from "typeorm";
 import {HttpException, HttpStatus, Injectable} from "@nestjs/common";
 import {UpdateProfileDto} from "./input/update.profile.dto";
 import {hashPassword} from "../auth/auth.service";
+import {DeleteResult} from "typeorm/query-builder/result/DeleteResult";
 
 @Injectable()
 export class ProfileService {
@@ -37,5 +38,9 @@ export class ProfileService {
         }
 
         return this.userRepository.save(Object.assign(user, input));
+    }
+
+    public async delete(user: User): Promise<DeleteResult> {
+        return this.userRepository.delete(user);
     }
 }

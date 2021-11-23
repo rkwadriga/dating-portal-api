@@ -13,6 +13,7 @@ export enum RoutesUrls {
     AUTH_REFRESH_TOKEN = 'PUT /auth/refresh',
     PROFILE_INFO = 'GET /profile/:id',
     PROFILE_UPDATE = 'PATCH /profile',
+    PROFILE_DELETE = 'DELETE /profile',
 }
 
 export type Request = {

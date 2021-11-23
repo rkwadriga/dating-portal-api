@@ -3,14 +3,7 @@ import {Test, TestingModule} from "@nestjs/testing";
 import {Connection} from "typeorm";
 import {AppModule} from "../src/app.module";
 import {User} from "../src/auth/user.entity";
-import {
-    loadFixtures,
-    send,
-    testInvalidResponse,
-    testNotFoundResponse,
-    testUnauthorized,
-    tokenForUser
-} from "./utils";
+import {loadFixtures, send, testInvalidResponse, testNotFoundResponse, testUnauthorized, tokenForUser} from "./utils";
 import {RoutesUrls} from "../src/api/api.router";
 import supertest from "supertest";
 import * as bcrypt from "bcrypt";
@@ -292,6 +285,43 @@ describe('Profile (e2e)', () => {
             return send(app.getHttpServer(), RoutesUrls.PROFILE_UPDATE, {...invalidData, token})
                 .then(response => {
                     testInvalidResponse(response, 2);
+                });
+        });
+    });
+
+    describe('Successful delete profile', () => {
+        it('Should return 401 status after deleting', async () => {
+            await loadFixtures(connection, '1-user.sql');
+            const token = tokenForUser(app).accessToken;
+            return send(app.getHttpServer(), RoutesUrls.PROFILE_DELETE, {token})
+                .then(response => {
+                    expect(response.statusCode).toBe(HttpStatus.NO_CONTENT);
+                    expect(response.body).toMatchObject({});
+                    return send(app.getHttpServer(), [RoutesUrls.PROFILE_INFO, {id: 1}], {token})
+                        .then(response => {
+                            testUnauthorized(response, HttpErrorCodes.UNAUTHORIZED);
+                        });
+                });
+        });
+
+        it('Should delete record from DB', async () => {
+            await loadFixtures(connection, '1-user.sql');
+            const token = tokenForUser(app).accessToken;
+            return send(app.getHttpServer(), RoutesUrls.PROFILE_DELETE, {token})
+                .then(async response => {
+                    // Get user from DB
+                    const deletedUser = await connection.getRepository(User).findOne(1);
+                    expect(deletedUser).toBeUndefined();
+                });
+        });
+    });
+
+    describe('Unsuccessful delete profile', () => {
+        it('Should return 401 status on deleting without authentication', async () => {
+            await loadFixtures(connection, '1-user.sql');
+            return send(app.getHttpServer(), RoutesUrls.PROFILE_DELETE)
+                .then(async response => {
+                    testUnauthorized(response);
                 });
         });
     });

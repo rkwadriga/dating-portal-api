@@ -58,7 +58,6 @@ export const send = async (httpServer: any, route: RoutesUrls|[RoutesUrls, {}], 
     if (token !== null) {
         logMessage = `Set token: ${token}`;
         logger.debug(logMessage);
-        //console.log(logMessage);
         result.set('Authorization', `Bearer ${token}`)
     }
     return result.send(params);
@@ -81,6 +80,12 @@ export const testUnauthorized = (response: supertest.Response, errorCode?: HttpE
     if (errorCode !== undefined) {
         expect(response.body.message).toBe(errorCode);
     }
+}
+
+export const testForbidden = (response: supertest.Response) => {
+    expect(response.statusCode).toBe(HttpStatus.FORBIDDEN);
+    expect(response.body.message).toBeDefined();
+    expect(typeof response.body.message).toBe('string');
 }
 
 export const testInvalidResponse = (response: supertest.Response, errorsCount = 0, httpStatus = HttpStatus.BAD_REQUEST) => {

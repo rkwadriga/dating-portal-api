@@ -1,11 +1,18 @@
 import {
-    Body,
-    ClassSerializerInterceptor,
     Controller,
-    Get, NotFoundException, Param, ParseIntPipe, Patch,
+    Body,
+    Param,
+    Get,
+    Patch,
+    Delete,
+    HttpCode,
     SerializeOptions,
     UseGuards,
-    UseInterceptors
+    UseInterceptors,
+    ClassSerializerInterceptor,
+    ParseIntPipe,
+    NotFoundException,
+    HttpStatus
 } from "@nestjs/common";
 import {ProfileService} from "./profile.service";
 import {AuthGuardJwt} from "../auth/guards/auth-guard.jwt";
@@ -41,5 +48,12 @@ export class ProfileController {
         await this.profileService.update(user, input);
 
         return new MeInfoDto(user);
+    }
+
+    @Delete()
+    @UseGuards(AuthGuardJwt)
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async delete(@CurrentUser() user: User) {
+        return await this.profileService.delete(user);
     }
 }
