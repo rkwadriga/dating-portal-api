@@ -10,7 +10,7 @@ import {
     UseGuards,
     UseInterceptors,
     ClassSerializerInterceptor,
-    ParseIntPipe,
+    ParseUUIDPipe,
     NotFoundException,
     HttpStatus
 } from "@nestjs/common";
@@ -32,8 +32,8 @@ export class ProfileController {
     @Get('/:id')
     @UseGuards(AuthGuardJwt)
     @UseInterceptors(ClassSerializerInterceptor)
-    async findOne(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User) {
-        const profile = id !== user.id ? await this.profileService.findOne(id) : user;
+    async findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
+        const profile = id !== user.uuid ? await this.profileService.findByUuid(id) : user;
         if (!profile) {
             throw new NotFoundException(`Profile not found`);
         }

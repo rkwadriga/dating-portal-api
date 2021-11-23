@@ -14,6 +14,7 @@ let mod: TestingModule;
 let connection: Connection;
 
 const user1 = {
+    id: 'b2fb0c51-60a8-4dcb-9e70-225d4dec2cec',
     email: 'user1@mail.com',
     password: 'test',
     retypedPassword: 'test',
@@ -22,6 +23,7 @@ const user1 = {
 };
 
 const user2 = {
+    id: '097c8819-8581-4f65-9e89-d5a6596b14f5',
     email: 'user2@mail.com',
     password: 'test',
     retypedPassword: 'test',
@@ -37,8 +39,10 @@ const updateData = {
     lastName: 'updated_First'
 }
 
-const testProfileInfo = (response: supertest.Response, user = {firstName: user1.firstName, lastName: user1.lastName}) => {
+const testProfileInfo = (response: supertest.Response, user = {id: user1.id, firstName: user1.firstName, lastName: user1.lastName}) => {
     expect(response.statusCode).toBe(HttpStatus.OK);
+    expect(response.body.id).toBeDefined();
+    expect(response.body.id).toBe(user.id);
     expect(response.body.firstName).toBeDefined();
     expect(response.body.firstName).toBe(user.firstName);
     expect(response.body.lastName).toBeDefined();
@@ -46,12 +50,13 @@ const testProfileInfo = (response: supertest.Response, user = {firstName: user1.
 };
 
 const testMeInfo = (response: supertest.Response, user = user1) => {
-    testProfileInfo(response, {firstName: user.firstName, lastName: user.lastName});
+    testProfileInfo(response, {id: user.id, firstName: user.firstName, lastName: user.lastName});
     expect(response.body.email).toBeDefined();
     expect(response.body.email).toBe(user.email);
 };
 
 const invalidToken = 'eyJhbGciDfghIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSrtgzZXIxQG1haWw4529tIiwic3ViIjoxLCJpYXQRf6E2Mzc2NjIzMzcsImV4cCI6MTY0MDI1NDMzN30.6RvqbyV5Fxv8cHkK2ZpimI2sTz492ZAsNd4p-EgERSx';
+const invalidUuid = '9a4dd1d7-6286-429d-8d95-e4ff57c9fde0';
 
 // npm run test:e2e -i profile.e2e-spec.ts
 describe('Profile (e2e)', () => {
@@ -75,7 +80,7 @@ describe('Profile (e2e)', () => {
         it('Should return current user\'s profile by ID', async () => {
             await loadFixtures(connection, '2-users.sql');
             const token = tokenForUser(app).accessToken;
-            return send(app.getHttpServer(), [RoutesUrls.PROFILE_INFO, {id: 1}], {token})
+            return send(app.getHttpServer(), [RoutesUrls.PROFILE_INFO, {id: user1.id}], {token})
                 .then(response => {
                     testMeInfo(response);
                 });
@@ -84,9 +89,9 @@ describe('Profile (e2e)', () => {
         it('Should return other user\'s profile by ID', async () => {
             await loadFixtures(connection, '2-users.sql');
             const token = tokenForUser(app).accessToken;
-            return send(app.getHttpServer(), [RoutesUrls.PROFILE_INFO, {id: 2}], {token})
+            return send(app.getHttpServer(), [RoutesUrls.PROFILE_INFO, {id: user2.id}], {token})
                 .then(response => {
-                    testProfileInfo(response, {firstName: user2.firstName, lastName: user2.lastName});
+                    testProfileInfo(response, {id: user2.id, firstName: user2.firstName, lastName: user2.lastName});
                     expect(response.body.email).toBeUndefined();
                 });
         });
@@ -94,14 +99,14 @@ describe('Profile (e2e)', () => {
 
     describe('Unsuccessful getting info', () => {
         it('Should return 401 status on getting profile without authorization', async () => {
-            return send(app.getHttpServer(), [RoutesUrls.PROFILE_INFO, {id: 1}])
+            return send(app.getHttpServer(), [RoutesUrls.PROFILE_INFO, {id: user1.id}])
                 .then(response => {
                     testUnauthorized(response, HttpErrorCodes.UNAUTHORIZED);
                 });
         });
 
         it('Should return 401 status on getting profile with invalid token', async () => {
-            return send(app.getHttpServer(), [RoutesUrls.PROFILE_INFO, {id: 1}], {token: invalidToken})
+            return send(app.getHttpServer(), [RoutesUrls.PROFILE_INFO, {id: user1.id}], {token: invalidToken})
                 .then(response => {
                     testUnauthorized(response, HttpErrorCodes.INVALID_TOKEN);
                 });
@@ -111,7 +116,7 @@ describe('Profile (e2e)', () => {
             await loadFixtures(connection, '2-users.sql');
             const token = tokenForUser(app).accessToken;
 
-            return send(app.getHttpServer(), [RoutesUrls.PROFILE_INFO, {id: 111}], {token})
+            return send(app.getHttpServer(), [RoutesUrls.PROFILE_INFO, {id: invalidUuid}], {token})
                 .then(response => {
                     testNotFoundResponse(response);
                 });
@@ -125,10 +130,10 @@ describe('Profile (e2e)', () => {
             return send(app.getHttpServer(), RoutesUrls.PROFILE_UPDATE, {...updateData, token})
                 .then(async response => {
                     // Check if info changed in response
-                    testMeInfo(response, updateData);
+                    testMeInfo(response, {...updateData, id: user1.id});
 
                     // Get user from DB
-                    const changedUser = await connection.getRepository(User).findOne(1);
+                    const changedUser = await connection.getRepository(User).findOne({uuid: user1.id});
 
                     // Check if password changed
                     expect(await bcrypt.compare(user1.password, changedUser.password)).toBeFalsy();
@@ -154,6 +159,28 @@ describe('Profile (e2e)', () => {
             return send(app.getHttpServer(), RoutesUrls.PROFILE_UPDATE, {...updateData, token: invalidToken})
                 .then(response => {
                     testUnauthorized(response, HttpErrorCodes.INVALID_TOKEN);
+                });
+        });
+
+        it('Should return 422 status on trying update id', async () => {
+            await loadFixtures(connection, '1-user.sql');
+            const token = tokenForUser(app).accessToken;
+            const invalidData = {...updateData, id: invalidUuid};
+
+            return send(app.getHttpServer(), RoutesUrls.PROFILE_UPDATE, {...invalidData, token})
+                .then(response => {
+                    testInvalidResponse(response, 1, HttpStatus.UNPROCESSABLE_ENTITY);
+                });
+        });
+
+        it('Should return 400 status on trying update uuid', async () => {
+            await loadFixtures(connection, '1-user.sql');
+            const token = tokenForUser(app).accessToken;
+            const invalidData = {...updateData, uuid: invalidUuid};
+
+            return send(app.getHttpServer(), RoutesUrls.PROFILE_UPDATE, {...invalidData, token})
+                .then(response => {
+                    testInvalidResponse(response, 1, HttpStatus.BAD_REQUEST);
                 });
         });
 
@@ -297,7 +324,7 @@ describe('Profile (e2e)', () => {
                 .then(response => {
                     expect(response.statusCode).toBe(HttpStatus.NO_CONTENT);
                     expect(response.body).toMatchObject({});
-                    return send(app.getHttpServer(), [RoutesUrls.PROFILE_INFO, {id: 1}], {token})
+                    return send(app.getHttpServer(), [RoutesUrls.PROFILE_INFO, {id: user1.id}], {token})
                         .then(response => {
                             testUnauthorized(response, HttpErrorCodes.UNAUTHORIZED);
                         });
@@ -310,7 +337,7 @@ describe('Profile (e2e)', () => {
             return send(app.getHttpServer(), RoutesUrls.PROFILE_DELETE, {token})
                 .then(async response => {
                     // Get user from DB
-                    const deletedUser = await connection.getRepository(User).findOne(1);
+                    const deletedUser = await connection.getRepository(User).findOne({uuid: user1.id});
                     expect(deletedUser).toBeUndefined();
                 });
         });

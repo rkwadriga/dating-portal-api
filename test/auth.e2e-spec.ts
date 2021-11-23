@@ -8,13 +8,13 @@ import {RoutesUrls} from "../src/api/api.router";
 import supertest from "supertest";
 import * as bcrypt from "bcrypt";
 import {HttpErrorCodes} from "../src/api/api.http";
-import {JwtService} from "@nestjs/jwt";
 
 let app: INestApplication;
 let mod: TestingModule;
 let connection: Connection;
 
 const userData = {
+    id: 'b2fb0c51-60a8-4dcb-9e70-225d4dec2cec',
     email: 'user1@mail.com',
     password: 'test',
     retypedPassword: 'test',
@@ -22,10 +22,14 @@ const userData = {
     lastName: 'First'
 };
 
-const testAuthData = (response: supertest.Response, httpCode = HttpStatus.CREATED) => {
+const testAuthData = (response: supertest.Response, httpCode = HttpStatus.CREATED, uuid?: string) => {
     expect(response.statusCode).toBe(httpCode);
     expect(response.body.id).toBeDefined();
-    expect(response.body.id).toBe(1);
+    expect(typeof response.body.id).toBe('string');
+    expect(response.body.id.length).toBe(36);
+    if (uuid !== undefined) {
+        expect(response.body.id).toBe(uuid);
+    }
     expect(response.body.email).toBeDefined();
     expect(response.body.email).toBe(userData.email);
     expect(response.body.firstName).toBeDefined();
@@ -68,13 +72,28 @@ describe('Auth (e2e)', function () {
     });
 
     describe('Successful registration', () => {
-        it('Should return a new user with a correct token', async () => {
+        it('Should return a new user with a correct token on creating with specific uuid', async () => {
+            return send(app.getHttpServer(), RoutesUrls.AUTH_REGISTRATION, userData)
+                .then(async response => {
+                    testAuthData(response, HttpStatus.CREATED, userData.id);
+                    // Get user from DB
+                    const createdUser = await connection.getRepository(User).findOne({uuid: userData.id});
+                    // Check password
+                    expect(await bcrypt.compare(userData.password, createdUser.password)).toBeTruthy();
+                    // Check data
+                    expect(createdUser.email).toBe(userData.email);
+                    expect(createdUser.firstName).toBe(userData.firstName);
+                    expect(createdUser.lastName).toBe(userData.lastName);
+                });
+        });
+
+        it('Should return a new user with a correct token on creating without', async () => {
             return send(app.getHttpServer(), RoutesUrls.AUTH_REGISTRATION, userData)
                 .then(async response => {
                     testAuthData(response);
 
                     // Get user from DB
-                    const createdUser = await connection.getRepository(User).findOne(1);
+                    const createdUser = await connection.getRepository(User).findOne({uuid: response.body.id});
                     // Check password
                     expect(await bcrypt.compare(userData.password, createdUser.password)).toBeTruthy();
                     // Check data
@@ -86,6 +105,30 @@ describe('Auth (e2e)', function () {
     });
 
     describe('Unsuccessful registration', () => {
+        it('Should return 400 status on sending short uuid', async () => {
+            const invalidData = {...userData, id: 'absde'};
+            return send(app.getHttpServer(), RoutesUrls.AUTH_REGISTRATION, invalidData)
+                .then(response => {
+                    testInvalidResponse(response, 1, HttpStatus.BAD_REQUEST);
+                });
+        });
+
+        it('Should return 400 status on sending long uuid', async () => {
+            const invalidData = {...userData, id: userData.id + 'a'};
+            return send(app.getHttpServer(), RoutesUrls.AUTH_REGISTRATION, invalidData)
+                .then(response => {
+                    testInvalidResponse(response, 1, HttpStatus.BAD_REQUEST);
+                });
+        });
+
+        it('Should return 400 status on sending numeric uuid', async () => {
+            const invalidData = {...userData, id: 123456789012345678901234567890123456};
+            return send(app.getHttpServer(), RoutesUrls.AUTH_REGISTRATION, invalidData)
+                .then(response => {
+                    testInvalidResponse(response, 2, HttpStatus.BAD_REQUEST);
+                });
+        });
+
         it('Should return 422 status on password and retypedPassword mismatch', async () => {
             const invalidData = {...userData, retypedPassword: 'invalid_password'};
             return send(app.getHttpServer(), RoutesUrls.AUTH_REGISTRATION, invalidData)
@@ -215,7 +258,7 @@ describe('Auth (e2e)', function () {
 
             return send(app.getHttpServer(), RoutesUrls.AUTH_LOGIN, loginData)
                 .then(response => {
-                    testAuthData(response);
+                    testAuthData(response, HttpStatus.CREATED, userData.id);
                 });
         });
     });
@@ -251,7 +294,7 @@ describe('Auth (e2e)', function () {
 
             return send(app.getHttpServer(), RoutesUrls.AUTH_REFRESH_TOKEN, token)
                 .then(response => {
-                    testAuthData(response, HttpStatus.OK);
+                    testAuthData(response, HttpStatus.OK, userData.id);
                     expect(response.body.token.accessToken === token.accessToken).toBeFalsy();
                     expect(response.body.token.refreshToken === token.refreshToken).toBeFalsy();
                 });
@@ -260,7 +303,7 @@ describe('Auth (e2e)', function () {
         it('Should rerun a 401 status on expired token sent', async () => {
             await loadFixtures(connection, '1-user.sql');
 
-            return send(app.getHttpServer(), [RoutesUrls.PROFILE_INFO, {id: 1}], {token: expiredAccessToken})
+            return send(app.getHttpServer(), [RoutesUrls.PROFILE_INFO, {id: userData.id}], {token: expiredAccessToken})
                 .then(response => {
                     testUnauthorized(response, HttpErrorCodes.EXPIRED_TOKEN);
                 });

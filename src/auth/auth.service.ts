@@ -8,6 +8,7 @@ import * as bcrypt from "bcrypt";
 import {TokenEntityDto, TokenType} from "./output/token.entity.dto";
 import {RefreshTokenDto} from "./input/refresh.token.dto";
 import {HttpErrorCodes} from "../api/api.http";
+import { v4 as uuidv4 } from 'uuid';
 
 export const hashPassword = async (password: string): Promise<string> => {
     return await bcrypt.hash(password, 10);
@@ -45,8 +46,15 @@ export class AuthService {
             throw new HttpException({status, error, message: errors}, status);
         }
 
+        // Generate user uuid
+        if (input.id === undefined) {
+            input.id = uuidv4();
+        }
+
+        const {id, ...partial} = input;
         return await this.userRepository.save({
-            ...input,
+            ...partial,
+            uuid: id,
             password: await hashPassword(input.password)
         });
     }

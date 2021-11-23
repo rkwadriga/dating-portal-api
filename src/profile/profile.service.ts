@@ -5,6 +5,7 @@ import {HttpException, HttpStatus, Injectable} from "@nestjs/common";
 import {UpdateProfileDto} from "./input/update.profile.dto";
 import {hashPassword} from "../auth/auth.service";
 import {DeleteResult} from "typeorm/query-builder/result/DeleteResult";
+import {HttpErrorCodes} from "../api/api.http";
 
 @Injectable()
 export class ProfileService {
@@ -13,14 +14,14 @@ export class ProfileService {
         private readonly userRepository: Repository<User>
     ) {}
 
-    public async findOne(id: number): Promise<User> {
-        return this.userRepository.findOne({id});
+    public async findByUuid(uuid: string): Promise<User> {
+        return this.userRepository.findOne({uuid});
     }
 
     public async update(user: User, input: UpdateProfileDto): Promise<User> {
         let errors: Array<string> = [];
         let status = HttpStatus.UNPROCESSABLE_ENTITY;
-        let error = 'Unprocessable entity';
+        let error = HttpErrorCodes.UNPROCESSABLE_ENTITY;
 
         // Check the "retype password" field
         if (input.password) {
@@ -30,6 +31,16 @@ export class ProfileService {
                 input.password = await hashPassword(input.password);
                 input.retypedPassword = undefined;
             }
+        }
+
+        // Check if "id" or "uud" field are defined
+        if (input['id'] !== undefined) {
+            errors.push('Filed "id" is closed for modifying');
+        }
+        if (input['uuid'] !== undefined) {
+            status = HttpStatus.BAD_REQUEST
+            error = HttpErrorCodes.BAD_REQUEST;
+            errors.push(error);
         }
 
         // If there is some errors - throw an 400 error

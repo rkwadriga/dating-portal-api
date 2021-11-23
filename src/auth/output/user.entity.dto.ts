@@ -4,7 +4,7 @@ import {TokenEntityDto} from "./token.entity.dto";
 
 export class UserEntityDto {
     @Expose()
-    id: number;
+    id: string;
 
     @Expose()
     email: string;
@@ -22,6 +22,6 @@ export class UserEntityDto {
         user: User,
         token: TokenEntityDto
     ) {
-        Object.assign(this, {...user, token});
+        Object.assign(this, {...user, token, id: user.uuid});
     }
 }

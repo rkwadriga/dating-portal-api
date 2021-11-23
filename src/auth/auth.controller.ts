@@ -2,14 +2,11 @@ import {
     ClassSerializerInterceptor,
     Controller,
     Body,
-    Get,
     Post,
     Put,
     SerializeOptions,
     UseGuards,
-    UseInterceptors,
-    ValidationPipe,
-    BadRequestException
+    UseInterceptors
 } from "@nestjs/common";
 import {CreateUserDto} from "./input/create.user.dto";
 import {AuthService} from "./auth.service";
