@@ -81,7 +81,7 @@ describe('Profile (e2e)', () => {
     describe('Successful getting info', () => {
         it('Should return current user\'s profile by ID', async () => {
             await loadFixtures(connection, '2-users.sql');
-            const token = tokenForUser(app);
+            const token = tokenForUser(app).accessToken;
             return send(app.getHttpServer(), [RoutesUrls.PROFILE_INFO, {id: 1}], {token})
                 .then(response => {
                     testMeInfo(response);
@@ -90,7 +90,7 @@ describe('Profile (e2e)', () => {
 
         it('Should return other user\'s profile by ID', async () => {
             await loadFixtures(connection, '2-users.sql');
-            const token = tokenForUser(app);
+            const token = tokenForUser(app).accessToken;
             return send(app.getHttpServer(), [RoutesUrls.PROFILE_INFO, {id: 2}], {token})
                 .then(response => {
                     testProfileInfo(response, {firstName: user2.firstName, lastName: user2.lastName});
@@ -116,7 +116,7 @@ describe('Profile (e2e)', () => {
 
         it('Should return a 404 status on getting profile by incorrect ID', async () => {
             await loadFixtures(connection, '2-users.sql');
-            const token = tokenForUser(app);
+            const token = tokenForUser(app).accessToken;
 
             return send(app.getHttpServer(), [RoutesUrls.PROFILE_INFO, {id: 111}], {token})
                 .then(response => {
@@ -128,7 +128,7 @@ describe('Profile (e2e)', () => {
     describe('Successful update profile', () => {
         it('Should return an updated info after updating profile', async () => {
             await loadFixtures(connection, '1-user.sql');
-            const token = tokenForUser(app);
+            const token = tokenForUser(app).accessToken;
             return send(app.getHttpServer(), RoutesUrls.PROFILE_UPDATE, {...updateData, token})
                 .then(async response => {
                     // Check if info changed in response
@@ -166,7 +166,7 @@ describe('Profile (e2e)', () => {
 
         it('Should return 422 status on password and retypedPassword mismatch', async () => {
             await loadFixtures(connection, '1-user.sql');
-            const token = tokenForUser(app);
+            const token = tokenForUser(app).accessToken;
             const invalidData = {...updateData, retypedPassword: 'invalid_password'};
 
             return send(app.getHttpServer(), RoutesUrls.PROFILE_UPDATE, {...invalidData, token})
@@ -177,7 +177,7 @@ describe('Profile (e2e)', () => {
 
         it('Should return status 400 on sending the empty "email" in user data', async () => {
             await loadFixtures(connection, '1-user.sql');
-            const token = tokenForUser(app);
+            const token = tokenForUser(app).accessToken;
             let invalidData = {...updateData, email: ''};
             return send(app.getHttpServer(), RoutesUrls.PROFILE_UPDATE, {...invalidData, token})
                 .then(response => {
@@ -187,7 +187,7 @@ describe('Profile (e2e)', () => {
 
         it('Should return status 400 on sending the empty "password" in user data', async () => {
             await loadFixtures(connection, '1-user.sql');
-            const token = tokenForUser(app);
+            const token = tokenForUser(app).accessToken;
             let invalidData = {...updateData, password: ''};
             return send(app.getHttpServer(), RoutesUrls.PROFILE_UPDATE, {...invalidData, token})
                 .then(response => {
@@ -197,7 +197,7 @@ describe('Profile (e2e)', () => {
 
         it('Should return status 400 on sending the empty "retypedPassword" in user data', async () => {
             await loadFixtures(connection, '1-user.sql');
-            const token = tokenForUser(app);
+            const token = tokenForUser(app).accessToken;
             let invalidData = {...updateData, retypedPassword: undefined};
             return send(app.getHttpServer(), RoutesUrls.PROFILE_UPDATE, {...invalidData, token})
                 .then(response => {
@@ -207,7 +207,7 @@ describe('Profile (e2e)', () => {
 
         it('Should return status 400 on sending the invalid "email" in user data', async () => {
             await loadFixtures(connection, '1-user.sql');
-            const token = tokenForUser(app);
+            const token = tokenForUser(app).accessToken;
             let invalidData = {...updateData, email: "invalid@email"};
             return send(app.getHttpServer(), RoutesUrls.PROFILE_UPDATE, {...invalidData, token})
                 .then(response => {
@@ -217,7 +217,7 @@ describe('Profile (e2e)', () => {
 
         it('Should return status 400 on sending the short "password" in user data', async () => {
             await loadFixtures(connection, '1-user.sql');
-            const token = tokenForUser(app);
+            const token = tokenForUser(app).accessToken;
             let invalidData = {...updateData, password: '123'};
             return send(app.getHttpServer(), RoutesUrls.PROFILE_UPDATE, {...invalidData, token})
                 .then(response => {
@@ -227,7 +227,7 @@ describe('Profile (e2e)', () => {
 
         it('Should return status 400 on sending the integer "password" in user data', async () => {
             await loadFixtures(connection, '1-user.sql');
-            const token = tokenForUser(app);
+            const token = tokenForUser(app).accessToken;
             let invalidData = {...updateData, password: 123};
             return send(app.getHttpServer(), RoutesUrls.PROFILE_UPDATE, {...invalidData, token})
                 .then(response => {
@@ -237,7 +237,7 @@ describe('Profile (e2e)', () => {
 
         it('Should return status 400 on sending the short "retypedPassword" in user data', async () => {
             await loadFixtures(connection, '1-user.sql');
-            const token = tokenForUser(app);
+            const token = tokenForUser(app).accessToken;
             let invalidData = {...updateData, retypedPassword: '123'};
             return send(app.getHttpServer(), RoutesUrls.PROFILE_UPDATE, {...invalidData, token})
                 .then(response => {
@@ -247,7 +247,7 @@ describe('Profile (e2e)', () => {
 
         it('Should return status 400 on sending the integer "retypedPassword" in user data', async () => {
             await loadFixtures(connection, '1-user.sql');
-            const token = tokenForUser(app);
+            const token = tokenForUser(app).accessToken;
             let invalidData = {...updateData, retypedPassword: 123};
             return send(app.getHttpServer(), RoutesUrls.PROFILE_UPDATE, {...invalidData, token})
                 .then(response => {
@@ -257,7 +257,7 @@ describe('Profile (e2e)', () => {
 
         it('Should return status 400 on sending the short "firstName" in user data', async () => {
             await loadFixtures(connection, '1-user.sql');
-            const token = tokenForUser(app);
+            const token = tokenForUser(app).accessToken;
             let invalidData = {...updateData, firstName: 'T'};
             return send(app.getHttpServer(), RoutesUrls.PROFILE_UPDATE, {...invalidData, token})
                 .then(response => {
@@ -267,7 +267,7 @@ describe('Profile (e2e)', () => {
 
         it('Should return status 400 on sending the integer "firstName" in user data', async () => {
             await loadFixtures(connection, '1-user.sql');
-            const token = tokenForUser(app);
+            const token = tokenForUser(app).accessToken;
             let invalidData = {...updateData, firstName: 123};
             return send(app.getHttpServer(), RoutesUrls.PROFILE_UPDATE, {...invalidData, token})
                 .then(response => {
@@ -277,7 +277,7 @@ describe('Profile (e2e)', () => {
 
         it('Should return status 400 on sending the short "lastName" in user data', async () => {
             await loadFixtures(connection, '1-user.sql');
-            const token = tokenForUser(app);
+            const token = tokenForUser(app).accessToken;
             let invalidData = {...updateData, lastName: 'T'};
             return send(app.getHttpServer(), RoutesUrls.PROFILE_UPDATE, {...invalidData, token})
                 .then(response => {
@@ -287,7 +287,7 @@ describe('Profile (e2e)', () => {
 
         it('Should return status 400 on sending the integer "lastName" in user data', async () => {
             await loadFixtures(connection, '1-user.sql');
-            const token = tokenForUser(app);
+            const token = tokenForUser(app).accessToken;
             let invalidData = {...updateData, lastName: 123};
             return send(app.getHttpServer(), RoutesUrls.PROFILE_UPDATE, {...invalidData, token})
                 .then(response => {

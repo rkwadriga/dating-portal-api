@@ -8,8 +8,6 @@ import * as bcrypt from "bcrypt";
 import {TokenEntityDto, TokenType} from "./output/token.entity.dto";
 import {RefreshTokenDto} from "./input/refresh.token.dto";
 import {HttpErrorCodes} from "../api/api.http";
-import {userInfo} from "os";
-import {audit} from "rxjs";
 
 export const hashPassword = async (password: string): Promise<string> => {
     return await bcrypt.hash(password, 10);

@@ -3,11 +3,12 @@ import {Test, TestingModule} from "@nestjs/testing";
 import {Connection} from "typeorm";
 import {AppModule} from "../src/app.module";
 import {User} from "../src/auth/user.entity";
-import {loadFixtures, send, testInvalidResponse, testUnauthorized} from "./utils";
+import {loadFixtures, send, testInvalidResponse, testUnauthorized, tokenForUser} from "./utils";
 import {RoutesUrls} from "../src/api/api.router";
 import supertest from "supertest";
 import * as bcrypt from "bcrypt";
 import {HttpErrorCodes} from "../src/api/api.http";
+import {JwtService} from "@nestjs/jwt";
 
 let app: INestApplication;
 let mod: TestingModule;
@@ -21,8 +22,8 @@ const userData = {
     lastName: 'First'
 };
 
-const testAuthData = (response: supertest.Response) => {
-    expect(response.statusCode).toBe(HttpStatus.CREATED);
+const testAuthData = (response: supertest.Response, httpCode = HttpStatus.CREATED) => {
+    expect(response.statusCode).toBe(httpCode);
     expect(response.body.id).toBeDefined();
     expect(response.body.id).toBe(1);
     expect(response.body.email).toBeDefined();
@@ -43,6 +44,10 @@ const testAuthData = (response: supertest.Response) => {
     expect(response.body.token.refreshToken.length).toBeGreaterThanOrEqual(100);
     expect(response.body.token.accessToken === response.body.token.refreshToken).toBeFalsy();
 };
+
+const expiredAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXIxQG1haWwuY29tIiwic3ViIjoxLCJzaWduYXR1cmUiOiJhY2Nlc3NfdG9rZW46MTYzNzY4ODQ1MTY5NSIsImlhdCI6MTYzNzY4ODQ1MSwiZXhwIjoxNjM3Njg4NTExfQ.0LDPdgGjiuc4fRBodx6UxzvCdxSUTBzmiNlnaEfE1JM';
+const expiredRefreshToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXIxQG1haWwuY29tIiwic3ViIjoxLCJzaWduYXR1cmUiOiJyZWZyZXNoX3Rva2VuOjE2Mzc2ODg0NTE2OTUiLCJpYXQiOjE2Mzc2ODg0NTEsImV4cCI6MTYzNzY4ODYzMX0.cT5KvEb209oqGRcvsIxYLemGkTwf_YKFWBS4h0hadWc';
+const invalidToken = 'eyJhbGciDfghIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSrtgzZXIxQG1haWw4529tIiwic3ViIjoxLCJpYXQRf6E2Mzc2NjIzMzcsImV4cCI6MTY0MDI1NDMzN30.6RvqbyV5Fxv8cHkK2ZpimI2sTz492ZAsNd4p-EgERSx';
 
 // npm run test:e2e -i auth.e2e-spec.ts
 describe('Auth (e2e)', function () {
@@ -235,6 +240,127 @@ describe('Auth (e2e)', function () {
             return send(app.getHttpServer(), RoutesUrls.AUTH_LOGIN, invalidData)
                 .then(response => {
                     testUnauthorized(response, HttpErrorCodes.UNAUTHORIZED);
+                });
+        });
+    });
+
+    describe('Successful refresh token', () => {
+        it('Should return a new token on refresh', async () => {
+            await loadFixtures(connection, '1-user.sql');
+            const token = tokenForUser(app);
+
+            return send(app.getHttpServer(), RoutesUrls.AUTH_REFRESH_TOKEN, token)
+                .then(response => {
+                    testAuthData(response, HttpStatus.OK);
+                    expect(response.body.token.accessToken === token.accessToken).toBeFalsy();
+                    expect(response.body.token.refreshToken === token.refreshToken).toBeFalsy();
+                });
+        });
+
+        it('Should rerun a 401 status on expired token sent', async () => {
+            await loadFixtures(connection, '1-user.sql');
+
+            return send(app.getHttpServer(), [RoutesUrls.PROFILE_INFO, {id: 1}], {token: expiredAccessToken})
+                .then(response => {
+                    testUnauthorized(response, HttpErrorCodes.EXPIRED_TOKEN);
+                });
+        });
+    });
+
+    describe('Unsuccessful refresh token', () => {
+        it('Should return 401 status on trying refresh an invalid token', async () => {
+            await loadFixtures(connection, '1-user.sql');
+            let token = tokenForUser(app);
+            token.accessToken = invalidToken;
+
+            return send(app.getHttpServer(), RoutesUrls.AUTH_REFRESH_TOKEN, token)
+                .then(response => {
+                    testUnauthorized(response, HttpErrorCodes.INVALID_TOKEN);
+                });
+        });
+
+        it('Should return 401 status on trying refresh with incorrect refreshToken', async () => {
+            await loadFixtures(connection, '1-user.sql');
+            let token = tokenForUser(app);
+            token.accessToken = expiredAccessToken;
+
+            return send(app.getHttpServer(), RoutesUrls.AUTH_REFRESH_TOKEN, token)
+                .then(response => {
+                    testUnauthorized(response, HttpErrorCodes.INVALID_TOKEN);
+                });
+        });
+
+        it('Should return 401 status on trying refresh with expired refreshToken', async () => {
+            await loadFixtures(connection, '1-user.sql');
+            const token = {accessToken: expiredAccessToken, refreshToken: expiredRefreshToken};
+
+            return send(app.getHttpServer(), RoutesUrls.AUTH_REFRESH_TOKEN, token)
+                .then(response => {
+                    testUnauthorized(response, HttpErrorCodes.EXPIRED_TOKEN);
+                });
+        });
+
+        it('Should return 401 status on trying refresh without accessToken', async () => {
+            await loadFixtures(connection, '1-user.sql');
+            let token = tokenForUser(app);
+            token.accessToken = undefined;
+
+            return send(app.getHttpServer(), RoutesUrls.AUTH_REFRESH_TOKEN, token)
+                .then(response => {
+                    testUnauthorized(response, HttpErrorCodes.UNAUTHORIZED);
+                });
+        });
+
+        it('Should return 400 status on trying refresh without refreshToken', async () => {
+            await loadFixtures(connection, '1-user.sql');
+            let token = tokenForUser(app);
+            token.refreshToken = undefined;
+
+            return send(app.getHttpServer(), RoutesUrls.AUTH_REFRESH_TOKEN, token)
+                .then(response => {
+                    testInvalidResponse(response, 3);
+                });
+        });
+
+        it('Should return 401 status on trying refresh with short accessToken', async () => {
+            await loadFixtures(connection, '1-user.sql');
+            let token = tokenForUser(app);
+            token.accessToken = "abcde";
+
+            return send(app.getHttpServer(), RoutesUrls.AUTH_REFRESH_TOKEN, token)
+                .then(response => {
+                    testUnauthorized(response, HttpErrorCodes.INVALID_TOKEN);
+                });
+        });
+
+        it('Should return 401 status on trying refresh with integer accessToken', async () => {
+            await loadFixtures(connection, '1-user.sql');
+            let token = tokenForUser(app);
+
+            return send(app.getHttpServer(), RoutesUrls.AUTH_REFRESH_TOKEN, {...token, accessToken: 123})
+                .then(response => {
+                    testUnauthorized(response, HttpErrorCodes.INVALID_TOKEN);
+                });
+        });
+
+        it('Should return 400 status on trying refresh with short refreshToken', async () => {
+            await loadFixtures(connection, '1-user.sql');
+            let token = tokenForUser(app);
+            token.refreshToken = "abcde";
+
+            return send(app.getHttpServer(), RoutesUrls.AUTH_REFRESH_TOKEN, token)
+                .then(response => {
+                    testInvalidResponse(response, 1);
+                });
+        });
+
+        it('Should return 400 status on trying refresh with integer refreshToken', async () => {
+            await loadFixtures(connection, '1-user.sql');
+            let token = tokenForUser(app);
+
+            return send(app.getHttpServer(), RoutesUrls.AUTH_REFRESH_TOKEN, {...token, refreshToken: 123})
+                .then(response => {
+                    testInvalidResponse(response, 2);
                 });
         });
     });

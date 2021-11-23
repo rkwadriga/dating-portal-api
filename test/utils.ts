@@ -8,6 +8,7 @@ import supertest, {Response, Test} from "supertest";
 import {HttpErrorCodes} from "../src/api/api.http";
 import { AuthService } from "../src/auth/auth.service";
 import {User} from "../src/auth/user.entity";
+import {TokenEntityDto} from "../src/auth/output/token.entity.dto";
 
 const logger = new Logger('e2e');
 const router = new ApiRouter();
@@ -69,8 +70,8 @@ export const tokenForUser = (
         id: 1,
         email: 'user1@mail.com'
     }
-): string => {
-    return app.get(AuthService).getTokenForUser(user as User).accessToken;
+): TokenEntityDto => {
+    return app.get(AuthService).getTokenForUser(user as User);
 }
 
 export const testUnauthorized = (response: supertest.Response, errorCode?: HttpErrorCodes) => {
