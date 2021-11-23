@@ -6,6 +6,10 @@ import {Repository} from "typeorm";
 import {CreateUserDto} from "./input/create.user.dto";
 import * as bcrypt from "bcrypt";
 
+export const hashPassword = async (password: string): Promise<string> => {
+    return await bcrypt.hash(password, 10);
+}
+
 @Injectable()
 export class AuthService {
     constructor(
@@ -35,16 +39,12 @@ export class AuthService {
 
         // If there is some errors - throw an 400 error
         if (errors.length > 0) {
-            throw new HttpException({
-                status,
-                error,
-                message: errors
-            }, status)
+            throw new HttpException({status, error, message: errors}, status);
         }
 
         return await this.userRepository.save({
             ...input,
-            password: await this.hashPassword(input.password)
+            password: await hashPassword(input.password)
         });
     }
 
@@ -53,9 +53,5 @@ export class AuthService {
             username: user.email,
             sub: user.id
         });
-    }
-
-    public async hashPassword(password: string): Promise<string> {
-        return await bcrypt.hash(password, 10);
     }
 }

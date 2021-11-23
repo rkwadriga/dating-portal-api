@@ -1,10 +1,13 @@
-import { INestApplication, Logger } from "@nestjs/common";
+import {HttpStatus, INestApplication, Logger} from "@nestjs/common";
 import * as fs from "fs";
 import * as path from "path";
 import * as sendRequest from 'supertest';
 import { Connection } from "typeorm";
 import { ApiRouter, RoutesUrls, HttpMethods } from "../src/api/api.router";
 import supertest, {Response, Test} from "supertest";
+import {HttpErrorCodes} from "../src/api/api.http";
+import { AuthService } from "../src/auth/auth.service";
+import {User} from "../src/auth/user.entity";
 
 const logger = new Logger('e2e');
 const router = new ApiRouter();
@@ -60,6 +63,39 @@ export const send = async (httpServer: any, route: RoutesUrls|[RoutesUrls, {}], 
     return result.send(params);
 }
 
-export const login = async (httpServer: any, username = 'user1@mail.com', password = 'test'): Promise<string> => {
-    return await send(httpServer, RoutesUrls.AUTH_LOGIN, {username, password}).then(response => response.body.token);
+export const tokenForUser = (
+    app: INestApplication,
+    user: Partial<User> = {
+        id: 1,
+        email: 'user1@mail.com'
+    }
+): string => {
+    return app.get(AuthService).getTokenForUser(user as User);
+}
+
+export const testUnauthorized = (response: supertest.Response, errorCode?: HttpErrorCodes) => {
+    expect(response.statusCode).toBe(HttpStatus.UNAUTHORIZED);
+    expect(response.body.message).toBeDefined();
+    expect(typeof response.body.message).toBe('string');
+    if (errorCode !== undefined) {
+        expect(response.body.message).toBe(errorCode);
+    }
+}
+
+export const testInvalidResponse = (response: supertest.Response, errorsCount = 0, httpStatus = HttpStatus.BAD_REQUEST) => {
+    expect(response.statusCode).toBe(httpStatus);
+    expect(response.body.message).toBeDefined();
+    expect(typeof response.body.message).toBe('object');
+    expect(response.body.error).toBeDefined();
+    if (errorsCount > 0) {
+        expect(response.body.message.length).toBe(errorsCount);
+    }
+}
+
+export const testNotFoundResponse = (response: supertest.Response) => {
+    expect(response.statusCode).toBe(HttpStatus.NOT_FOUND);
+    expect(response.body.message).toBeDefined();
+    expect(typeof response.body.message).toBe('string');
+    expect(response.body.error).toBeDefined();
+    expect(typeof response.body.error).toBe('string');
 }

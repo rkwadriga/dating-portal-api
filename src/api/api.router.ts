@@ -11,6 +11,7 @@ export enum RoutesUrls {
     AUTH_REGISTRATION = 'POST /auth/registration',
     AUTH_LOGIN = 'POST /auth/login',
     PROFILE_INFO = 'GET /profile/:id',
+    PROFILE_UPDATE = 'PATCH /profile',
 }
 
 export type Request = {

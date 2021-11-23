@@ -3,9 +3,11 @@ import {Test, TestingModule} from "@nestjs/testing";
 import {Connection} from "typeorm";
 import {AppModule} from "../src/app.module";
 import {User} from "../src/auth/user.entity";
-import {loadFixtures, send} from "./utils";
+import {loadFixtures, send, testInvalidResponse, testUnauthorized} from "./utils";
 import {RoutesUrls} from "../src/api/api.router";
 import supertest from "supertest";
+import * as bcrypt from "bcrypt";
+import {HttpErrorCodes} from "../src/api/api.http";
 
 let app: INestApplication;
 let mod: TestingModule;
@@ -57,21 +59,27 @@ describe('Auth (e2e)', function () {
     describe('Successful registration', () => {
         it('Should return a new user with a correct token', async () => {
             return send(app.getHttpServer(), RoutesUrls.AUTH_REGISTRATION, userData)
-                .then(response => {
+                .then(async response => {
                     testAuthData(response);
+
+                    // Get user from DB
+                    const createdUser = await connection.getRepository(User).findOne(1);
+                    // Check password
+                    expect(await bcrypt.compare(userData.password, createdUser.password)).toBeTruthy();
+                    // Check data
+                    expect(createdUser.email).toBe(userData.email);
+                    expect(createdUser.firstName).toBe(userData.firstName);
+                    expect(createdUser.lastName).toBe(userData.lastName);
                 });
         });
     });
 
     describe('Unsuccessful registration', () => {
-        it('Should return 400 status on password and retypedPassword mismatch', async () => {
+        it('Should return 422 status on password and retypedPassword mismatch', async () => {
             const invalidData = {...userData, retypedPassword: 'invalid_password'};
             return send(app.getHttpServer(), RoutesUrls.AUTH_REGISTRATION, invalidData)
                 .then(response => {
-                    expect(response.statusCode).toBe(HttpStatus.UNPROCESSABLE_ENTITY);
-                    expect(response.body.message).toBeDefined();
-                    expect(typeof response.body.message).toBe('object');
-                    expect(response.body.error).toBeDefined();
+                    testInvalidResponse(response, 1, HttpStatus.UNPROCESSABLE_ENTITY);
                 });
         });
 
@@ -79,11 +87,7 @@ describe('Auth (e2e)', function () {
             let invalidData = {...userData, email: undefined};
             return send(app.getHttpServer(), RoutesUrls.AUTH_REGISTRATION, invalidData)
                 .then(response => {
-                    expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
-                    expect(response.body.message).toBeDefined();
-                    expect(typeof response.body.message).toBe('object');
-                    expect(response.body.message.length).toBe(2);
-                    expect(response.body.error).toBeDefined();
+                    testInvalidResponse(response, 2);
                 });
         });
 
@@ -91,11 +95,7 @@ describe('Auth (e2e)', function () {
             let invalidData = {...userData, password: undefined};
             return send(app.getHttpServer(), RoutesUrls.AUTH_REGISTRATION, invalidData)
                 .then(response => {
-                    expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
-                    expect(response.body.message).toBeDefined();
-                    expect(typeof response.body.message).toBe('object');
-                    expect(response.body.message.length).toBe(3);
-                    expect(response.body.error).toBeDefined();
+                    testInvalidResponse(response, 3);
                 });
         });
 
@@ -103,11 +103,7 @@ describe('Auth (e2e)', function () {
             let invalidData = {...userData, retypedPassword: undefined};
             return send(app.getHttpServer(), RoutesUrls.AUTH_REGISTRATION, invalidData)
                 .then(response => {
-                    expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
-                    expect(response.body.message).toBeDefined();
-                    expect(typeof response.body.message).toBe('object');
-                    expect(response.body.message.length).toBe(3);
-                    expect(response.body.error).toBeDefined();
+                    testInvalidResponse(response, 3);
                 });
         });
 
@@ -115,11 +111,7 @@ describe('Auth (e2e)', function () {
             let invalidData = {...userData, email: "invalid@email"};
             return send(app.getHttpServer(), RoutesUrls.AUTH_REGISTRATION, invalidData)
                 .then(response => {
-                    expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
-                    expect(response.body.message).toBeDefined();
-                    expect(typeof response.body.message).toBe('object');
-                    expect(response.body.message.length).toBe(1);
-                    expect(response.body.error).toBeDefined();
+                    testInvalidResponse(response, 1);
                 });
         });
 
@@ -127,11 +119,7 @@ describe('Auth (e2e)', function () {
             let invalidData = {...userData, password: '123'};
             return send(app.getHttpServer(), RoutesUrls.AUTH_REGISTRATION, invalidData)
                 .then(response => {
-                    expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
-                    expect(response.body.message).toBeDefined();
-                    expect(typeof response.body.message).toBe('object');
-                    expect(response.body.message.length).toBe(1);
-                    expect(response.body.error).toBeDefined();
+                    testInvalidResponse(response, 1);
                 });
         });
 
@@ -139,11 +127,7 @@ describe('Auth (e2e)', function () {
             let invalidData = {...userData, password: 123};
             return send(app.getHttpServer(), RoutesUrls.AUTH_REGISTRATION, invalidData)
                 .then(response => {
-                    expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
-                    expect(response.body.message).toBeDefined();
-                    expect(typeof response.body.message).toBe('object');
-                    expect(response.body.message.length).toBe(2);
-                    expect(response.body.error).toBeDefined();
+                    testInvalidResponse(response, 2);
                 });
         });
 
@@ -151,11 +135,7 @@ describe('Auth (e2e)', function () {
             let invalidData = {...userData, retypedPassword: '123'};
             return send(app.getHttpServer(), RoutesUrls.AUTH_REGISTRATION, invalidData)
                 .then(response => {
-                    expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
-                    expect(response.body.message).toBeDefined();
-                    expect(typeof response.body.message).toBe('object');
-                    expect(response.body.message.length).toBe(1);
-                    expect(response.body.error).toBeDefined();
+                    testInvalidResponse(response, 1);
                 });
         });
 
@@ -163,11 +143,7 @@ describe('Auth (e2e)', function () {
             let invalidData = {...userData, retypedPassword: 123};
             return send(app.getHttpServer(), RoutesUrls.AUTH_REGISTRATION, invalidData)
                 .then(response => {
-                    expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
-                    expect(response.body.message).toBeDefined();
-                    expect(typeof response.body.message).toBe('object');
-                    expect(response.body.message.length).toBe(2);
-                    expect(response.body.error).toBeDefined();
+                    testInvalidResponse(response, 2);
                 });
         });
 
@@ -175,11 +151,7 @@ describe('Auth (e2e)', function () {
             let invalidData = {...userData, firstName: 'T'};
             return send(app.getHttpServer(), RoutesUrls.AUTH_REGISTRATION, invalidData)
                 .then(response => {
-                    expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
-                    expect(response.body.message).toBeDefined();
-                    expect(typeof response.body.message).toBe('object');
-                    expect(response.body.message.length).toBe(1);
-                    expect(response.body.error).toBeDefined();
+                    testInvalidResponse(response, 1);
                 });
         });
 
@@ -187,11 +159,7 @@ describe('Auth (e2e)', function () {
             let invalidData = {...userData, firstName: 123};
             return send(app.getHttpServer(), RoutesUrls.AUTH_REGISTRATION, invalidData)
                 .then(response => {
-                    expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
-                    expect(response.body.message).toBeDefined();
-                    expect(typeof response.body.message).toBe('object');
-                    expect(response.body.message.length).toBe(2);
-                    expect(response.body.error).toBeDefined();
+                    testInvalidResponse(response, 2);
                 });
         });
 
@@ -199,11 +167,7 @@ describe('Auth (e2e)', function () {
             let invalidData = {...userData, lastName: 'T'};
             return send(app.getHttpServer(), RoutesUrls.AUTH_REGISTRATION, invalidData)
                 .then(response => {
-                    expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
-                    expect(response.body.message).toBeDefined();
-                    expect(typeof response.body.message).toBe('object');
-                    expect(response.body.message.length).toBe(1);
-                    expect(response.body.error).toBeDefined();
+                    testInvalidResponse(response, 1);
                 });
         });
 
@@ -211,11 +175,7 @@ describe('Auth (e2e)', function () {
             let invalidData = {...userData, lastName: 123};
             return send(app.getHttpServer(), RoutesUrls.AUTH_REGISTRATION, invalidData)
                 .then(response => {
-                    expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
-                    expect(response.body.message).toBeDefined();
-                    expect(typeof response.body.message).toBe('object');
-                    expect(response.body.message.length).toBe(2);
-                    expect(response.body.error).toBeDefined();
+                    testInvalidResponse(response, 2);
                 });
         });
 
@@ -231,11 +191,7 @@ describe('Auth (e2e)', function () {
             }
             return send(app.getHttpServer(), RoutesUrls.AUTH_REGISTRATION, newUserData)
                 .then(response => {
-                    expect(response.statusCode).toBe(HttpStatus.CONFLICT);
-                    expect(response.body.message).toBeDefined();
-                    expect(typeof response.body.message).toBe('object');
-                    expect(response.body.message.length).toBe(1);
-                    expect(response.body.error).toBeDefined();
+                    testInvalidResponse(response, 1, HttpStatus.CONFLICT);
                 });
         });
     });
@@ -262,9 +218,7 @@ describe('Auth (e2e)', function () {
 
             return send(app.getHttpServer(), RoutesUrls.AUTH_LOGIN, invalidData)
                 .then(response => {
-                    expect(response.statusCode).toBe(HttpStatus.UNAUTHORIZED);
-                    expect(response.body.message).toBeDefined();
-                    expect(typeof response.body.message).toBe('string');
+                    testUnauthorized(response, HttpErrorCodes.UNAUTHORIZED);
                 });
         });
 
@@ -274,9 +228,7 @@ describe('Auth (e2e)', function () {
 
             return send(app.getHttpServer(), RoutesUrls.AUTH_LOGIN, invalidData)
                 .then(response => {
-                    expect(response.statusCode).toBe(HttpStatus.UNAUTHORIZED);
-                    expect(response.body.message).toBeDefined();
-                    expect(typeof response.body.message).toBe('string');
+                    testUnauthorized(response, HttpErrorCodes.UNAUTHORIZED);
                 });
         });
     });
