@@ -1,4 +1,4 @@
-import {HttpException, HttpStatus, Injectable} from "@nestjs/common";
+import {HttpException, HttpStatus, Injectable, UnauthorizedException} from "@nestjs/common";
 import {JwtService} from "@nestjs/jwt";
 import {InjectRepository} from "@nestjs/typeorm";
 import {User} from "./user.entity";
@@ -6,6 +6,10 @@ import {Repository} from "typeorm";
 import {CreateUserDto} from "./input/create.user.dto";
 import * as bcrypt from "bcrypt";
 import {TokenEntityDto, TokenType} from "./output/token.entity.dto";
+import {RefreshTokenDto} from "./input/refresh.token.dto";
+import {HttpErrorCodes} from "../api/api.http";
+import {userInfo} from "os";
+import {audit} from "rxjs";
 
 export const hashPassword = async (password: string): Promise<string> => {
     return await bcrypt.hash(password, 10);
@@ -23,7 +27,7 @@ export class AuthService {
     public async createUser(input: CreateUserDto): Promise<User> {
         let errors: Array<string> = [];
         let status = HttpStatus.UNPROCESSABLE_ENTITY;
-        let error = 'Unprocessable entity';
+        let error = HttpErrorCodes.UNPROCESSABLE_ENTITY;
 
         // Check the "retype password" field
         if (input.password !== input.retypedPassword) {
@@ -35,7 +39,7 @@ export class AuthService {
         if (existingUser) {
             errors.push('This email is already registered');
             status = HttpStatus.CONFLICT;
-            error = 'Conflict';
+            error = HttpErrorCodes.CONFLICT;
         }
 
         // If there is some errors - throw an 400 error
@@ -54,8 +58,65 @@ export class AuthService {
         const timestamp = Date.now();
 
         return new TokenEntityDto(
-            this.jwtService.sign({...payload, signature: TokenType.ACCESS_TOKEN + ':' + timestamp}),
-            this.jwtService.sign({...payload, signature: TokenType.REFRESH_TOKEN + ':' + timestamp})
+            this.jwtService.sign({
+                ...payload,
+                signature: TokenType.ACCESS_TOKEN + ':' + timestamp},
+                {expiresIn: process.env.AUTH_TOKEN_LIFETIME}
+            ),
+            this.jwtService.sign({
+                ...payload,
+                signature: TokenType.REFRESH_TOKEN + ':' + timestamp},
+                {expiresIn: process.env.REFRESH_TOKEN_LIFETIME}
+            )
         );
+    }
+
+    public async refreshUserToken(input: RefreshTokenDto): Promise<User> {
+        // Parse access and refresh tokens
+        const accessToken = this.jwtService.decode(input.accessToken);
+        const refreshToken = this.jwtService.decode(input.refreshToken);
+        if (!accessToken || !refreshToken) {
+            throw new UnauthorizedException(HttpErrorCodes.INVALID_TOKEN);
+        }
+
+        // Check the tokens required fields
+        const requiredFields = ['username', 'sub', 'signature', 'exp'];
+        requiredFields.forEach((field) => {
+            if (accessToken[field] === undefined || refreshToken[field] === undefined) {
+                throw new UnauthorizedException(HttpErrorCodes.INVALID_TOKEN);
+            }
+        });
+
+        // Check refresh token expired at
+        if (refreshToken['exp'] <= Date.now() / 1000) {
+            throw new UnauthorizedException(HttpErrorCodes.EXPIRED_TOKEN);
+        }
+
+        // Compare fields that should be equal to both tokens
+        const equalFields = ['username', 'sub'];
+        equalFields.forEach((field) => {
+            if (accessToken[field] !== refreshToken[field]) {
+                throw new UnauthorizedException(HttpErrorCodes.UNAUTHORIZED);
+            }
+        });
+
+        // Compare tokens signatures
+        if (AuthService.parseTokenSignature(accessToken['signature'], TokenType.ACCESS_TOKEN) !==
+            AuthService.parseTokenSignature(refreshToken['signature'], TokenType.REFRESH_TOKEN)
+        ) {
+            throw new UnauthorizedException(HttpErrorCodes.INVALID_TOKEN);
+        }
+
+        // Find and return user found by ID
+        return await this.userRepository.findOne(accessToken.sub);
+    }
+
+    private static parseTokenSignature(signature: string, tokenType: TokenType): string {
+        const re = new RegExp(`${tokenType}:(.+)`);
+        const matches = signature.match(re);
+        if (!matches || matches[1] === undefined) {
+            throw new UnauthorizedException(HttpErrorCodes.INVALID_TOKEN);
+        }
+        return matches[1];
     }
 }

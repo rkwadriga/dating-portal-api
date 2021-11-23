@@ -2,6 +2,8 @@
 
 export enum HttpErrorCodes {
     UNAUTHORIZED = 'Unauthorized',
-    EXPIRED_TOKEN = 'Token_Expired',
-    INVALID_TOKEN = 'Invalid_Token'
+    EXPIRED_TOKEN = 'Expired token',
+    INVALID_TOKEN = 'Invalid Token',
+    CONFLICT = 'Conflict',
+    UNPROCESSABLE_ENTITY = 'Unprocessable entity'
 }

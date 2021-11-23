@@ -4,6 +4,7 @@ import {
     Body,
     Get,
     Post,
+    Put,
     SerializeOptions,
     UseGuards,
     UseInterceptors,
@@ -16,6 +17,8 @@ import {UserEntityDto} from "./output/user.entity.dto";
 import {AuthGuardLocal} from "./guards/auth-guard.local";
 import {CurrentUser} from "./current-user.decorator";
 import {User} from "./user.entity";
+import {AuthGuardRefresh} from "./guards/auth-guard.refresh";
+import {RefreshTokenDto} from "./input/refresh.token.dto";
 
 @Controller('/api/auth')
 @SerializeOptions({strategy: 'excludeAll'})
@@ -38,6 +41,17 @@ export class AuthController {
     @UseGuards(AuthGuardLocal)
     @UseInterceptors(ClassSerializerInterceptor)
     async login(@CurrentUser() user: User) {
+        return new UserEntityDto(
+            user,
+            this.authService.getTokenForUser(user)
+        );
+    }
+
+    @Put('/refresh')
+    @UseGuards(AuthGuardRefresh)
+    @UseInterceptors(ClassSerializerInterceptor)
+    async refresh(@Body() input: RefreshTokenDto) {
+        const user = await this.authService.refreshUserToken(input);
         return new UserEntityDto(
             user,
             this.authService.getTokenForUser(user)

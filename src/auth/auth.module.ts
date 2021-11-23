@@ -6,6 +6,7 @@ import {JwtModule} from "@nestjs/jwt";
 import {AuthService} from "./auth.service";
 import {LocalStrategy} from "./strategies/local.strategy";
 import {JwtStrategy} from "./strategies/jwt.strategy";
+import {RefreshStrategy} from "./strategies/refresh.strategy";
 
 @Module({
     imports: [
@@ -14,12 +15,12 @@ import {JwtStrategy} from "./strategies/jwt.strategy";
             useFactory: () => ({
                 secret: process.env.AUTH_SECRET,
                 signOptions: {
-                    expiresIn: '1m'
+                    expiresIn: process.env.AUTH_TOKEN_LIFETIME
                 }
             })
         })
     ],
-    providers: [LocalStrategy, JwtStrategy, AuthService],
+    providers: [LocalStrategy, JwtStrategy, RefreshStrategy, AuthService],
     controllers: [AuthController]
 })
 export class AuthModule {
