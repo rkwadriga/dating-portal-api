@@ -1,6 +1,6 @@
 import {AuthGuard} from "@nestjs/passport";
 import {UnauthorizedException} from "@nestjs/common";
-import {HttpErrorCodes} from "../api/api.http";
+import {HttpErrorCodes} from "../../api/api.http";
 
 export class AuthGuardJwt extends AuthGuard('jwt') {
     handleRequest (err, user, info: Error) {

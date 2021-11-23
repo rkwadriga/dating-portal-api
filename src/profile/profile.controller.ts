@@ -8,7 +8,7 @@ import {
     UseInterceptors
 } from "@nestjs/common";
 import {ProfileService} from "./profile.service";
-import {AuthGuardJwt} from "../guards/auth-guard.jwt";
+import {AuthGuardJwt} from "../auth/guards/auth-guard.jwt";
 import {CurrentUser} from "../auth/current-user.decorator";
 import {User} from "../auth/user.entity";
 import {ProfileInfoDto} from "./output/profile.info.dto";
