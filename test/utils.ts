@@ -70,7 +70,7 @@ export const tokenForUser = (
         email: 'user1@mail.com'
     }
 ): string => {
-    return app.get(AuthService).getTokenForUser(user as User);
+    return app.get(AuthService).getTokenForUser(user as User).accessToken;
 }
 
 export const testUnauthorized = (response: supertest.Response, errorCode?: HttpErrorCodes) => {

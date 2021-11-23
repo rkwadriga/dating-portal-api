@@ -34,8 +34,14 @@ const testAuthData = (response: supertest.Response) => {
     expect(response.body.password).toBeUndefined();
     expect(response.body.retypedPassword).toBeUndefined();
     expect(response.body.token).toBeDefined();
-    expect(response.body.token.length).toBeDefined();
-    expect(response.body.token.length).toBeGreaterThanOrEqual(100);
+    expect(typeof response.body.token).toBe('object');
+    expect(response.body.token.accessToken).toBeDefined();
+    expect(typeof response.body.token.accessToken).toBe('string');
+    expect(response.body.token.accessToken.length).toBeGreaterThanOrEqual(100);
+    expect(response.body.token.refreshToken).toBeDefined();
+    expect(typeof response.body.token.refreshToken).toBe('string');
+    expect(response.body.token.refreshToken.length).toBeGreaterThanOrEqual(100);
+    expect(response.body.token.accessToken === response.body.token.refreshToken).toBeFalsy();
 };
 
 // npm run test:e2e -i auth.e2e-spec.ts

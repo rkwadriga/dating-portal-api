@@ -5,6 +5,7 @@ import {User} from "./user.entity";
 import {Repository} from "typeorm";
 import {CreateUserDto} from "./input/create.user.dto";
 import * as bcrypt from "bcrypt";
+import {TokenEntityDto, TokenType} from "./output/token.entity.dto";
 
 export const hashPassword = async (password: string): Promise<string> => {
     return await bcrypt.hash(password, 10);
@@ -48,10 +49,13 @@ export class AuthService {
         });
     }
 
-    public getTokenForUser(user: User): string {
-        return this.jwtService.sign({
-            username: user.email,
-            sub: user.id
-        });
+    public getTokenForUser(user: User): TokenEntityDto {
+        const payload = {username: user.email, sub: user.id};
+        const timestamp = Date.now();
+
+        return new TokenEntityDto(
+            this.jwtService.sign({...payload, signature: TokenType.ACCESS_TOKEN + ':' + timestamp}),
+            this.jwtService.sign({...payload, signature: TokenType.REFRESH_TOKEN + ':' + timestamp})
+        );
     }
 }
