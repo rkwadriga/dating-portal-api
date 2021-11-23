@@ -9,15 +9,7 @@ import {ProfileController} from "./profile.controller";
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([User]),
-        JwtModule.registerAsync({
-            useFactory: () => ({
-                secret: process.env.AUTH_SECRET,
-                signOptions: {
-                    expiresIn: '63m'
-                }
-            })
-        })
+        TypeOrmModule.forFeature([User])
     ],
     providers: [LocalStrategy, JwtStrategy, ProfileService],
     controllers: [ProfileController]
