@@ -3,6 +3,7 @@ import {
     Body,
     Param,
     Get,
+    Post,
     Patch,
     Delete,
     HttpCode,
@@ -12,7 +13,7 @@ import {
     ClassSerializerInterceptor,
     ParseUUIDPipe,
     NotFoundException,
-    HttpStatus
+    HttpStatus, UploadedFile
 } from "@nestjs/common";
 import {ProfileService} from "./profile.service";
 import {AuthGuardJwt} from "../auth/guards/auth-guard.jwt";
@@ -21,6 +22,8 @@ import {User} from "../auth/user.entity";
 import {ProfileInfoDto} from "./output/profile.info.dto";
 import {MeInfoDto} from "./output/me.info.dto";
 import {UpdateProfileDto} from "./input/update.profile.dto";
+import {FileInterceptor} from "@nestjs/platform-express";
+
 
 @Controller('/api/profile')
 @SerializeOptions({strategy: 'excludeAll'})
@@ -55,5 +58,14 @@ export class ProfileController {
     @HttpCode(HttpStatus.NO_CONTENT)
     async delete(@CurrentUser() user: User) {
         return await this.profileService.delete(user);
+    }
+
+    @Post('/:id/photo')
+    @UseGuards(AuthGuardJwt)
+    @UseInterceptors(FileInterceptor('photo')) // process.env.UPLOAD_DIRECTORY  './var/uploads'
+    async uploadImage(@UploadedFile() file: Express.Multer.File, @CurrentUser() user: User) {
+        await this.profileService.addPhoto(user, file);
+
+        return file;
     }
 }

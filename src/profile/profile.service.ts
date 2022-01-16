@@ -6,12 +6,14 @@ import {UpdateProfileDto} from "./input/update.profile.dto";
 import {hashPassword} from "../auth/auth.service";
 import {DeleteResult} from "typeorm/query-builder/result/DeleteResult";
 import {HttpErrorCodes} from "../api/api.http";
+import {FileSystemService} from "../service/fileSystem.service";
 
 @Injectable()
 export class ProfileService {
     constructor(
         @InjectRepository(User)
-        private readonly userRepository: Repository<User>
+        private readonly userRepository: Repository<User>,
+        private readonly fileSystem: FileSystemService
     ) {}
 
     public async findByUuid(uuid: string): Promise<User> {
@@ -53,5 +55,10 @@ export class ProfileService {
 
     public async delete(user: User): Promise<DeleteResult> {
         return this.userRepository.delete(user);
+    }
+
+    public async addPhoto(user: User, file: Express.Multer.File) {
+        const photoFilePath = await this.fileSystem.saveUserPhoto(user, file);
+        console.log(photoFilePath);
     }
 }

@@ -10,6 +10,7 @@ pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
+/public
 
 # OS
 .DS_Store
@@ -35,3 +36,7 @@ lerna-debug.log*
 !.vscode/extensions.json
 
 package-lock.json
+
+###> Docker ###
+/.docker/composer/tmp
+/.docker/php/logs
