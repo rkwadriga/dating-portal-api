@@ -64,8 +64,8 @@ export class ProfileController {
     @UseGuards(AuthGuardJwt)
     @UseInterceptors(FileInterceptor('photo')) // process.env.UPLOAD_DIRECTORY  './var/uploads'
     async uploadImage(@UploadedFile() file: Express.Multer.File, @CurrentUser() user: User) {
-        await this.profileService.addPhoto(user, file);
+        const photo = await this.profileService.addPhoto(user, file);
 
-        return file;
+        return photo;
     }
 }

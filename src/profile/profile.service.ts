@@ -59,6 +59,7 @@ export class ProfileService {
 
     public async addPhoto(user: User, file: Express.Multer.File) {
         const photoFilePath = await this.fileSystem.saveUserPhoto(user, file);
-        console.log(photoFilePath);
+
+        return photoFilePath.replace('./', '/');
     }
 }
