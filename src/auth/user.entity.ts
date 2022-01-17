@@ -1,4 +1,6 @@
-import {Column, Entity, PrimaryGeneratedColumn} from "typeorm";
+import {Column, Entity, OneToMany, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn} from "typeorm";
+import {Photo} from "../profile/photo.entity";
+import {Expose} from "class-transformer";
 
 @Entity()
 export class User {
@@ -19,4 +21,39 @@ export class User {
 
     @Column()
     lastName: string;
+
+    @CreateDateColumn()
+    createdAt: Date;
+
+    @UpdateDateColumn()
+    updatedAt: Date;
+
+    @OneToMany(() => Photo, photo => photo.user, {eager: true, cascade: true})
+    photos: Photo[];
+
+    avatarPhoto: Photo;
+
+    public getAvatar(): Photo {
+        if (this.avatarPhoto) {
+            return this.avatarPhoto;
+        }
+
+        this.photos.every(photo => {
+            this.avatarPhoto = photo;
+            return !photo.isAvatar;
+        });
+
+        return this.avatarPhoto;
+    }
+
+    public addPhoto(photo: Photo): this {
+        if (this.photos === undefined) {
+            this.photos = [];
+        }
+
+        photo.user = this;
+        this.photos.push(photo);
+
+        return this;
+    }
 }

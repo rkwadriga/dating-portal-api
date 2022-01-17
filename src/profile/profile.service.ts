@@ -7,6 +7,7 @@ import {hashPassword} from "../auth/auth.service";
 import {DeleteResult} from "typeorm/query-builder/result/DeleteResult";
 import {HttpErrorCodes} from "../api/api.http";
 import {FileSystemService} from "../service/fileSystem.service";
+import {Photo} from "./photo.entity";
 
 @Injectable()
 export class ProfileService {
@@ -58,8 +59,17 @@ export class ProfileService {
     }
 
     public async addPhoto(user: User, file: Express.Multer.File) {
+        // Save photo image file
         const photoFilePath = await this.fileSystem.saveUserPhoto(user, file);
 
-        return photoFilePath.replace('./', '/');
+        // Create new "Photo" entity (transform file's path to relative path that can be used as a relative web-link)
+        let photo = new Photo();
+        photo.path = photoFilePath.replace('./', '/');
+        photo.size = file.size;
+
+        // Add new photo to user's entity
+        user.addPhoto(photo);
+        // Save user (it will insert the new "photo" record in DB and join it to current user)
+        await this.userRepository.save(user);
     }
 }
