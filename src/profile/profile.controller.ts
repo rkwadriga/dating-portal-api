@@ -36,12 +36,12 @@ export class ProfileController {
     @UseGuards(AuthGuardJwt)
     @UseInterceptors(ClassSerializerInterceptor)
     async findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
-        const profile = id !== user.uuid ? await this.profileService.findByUuid(id) : user;
+        const profile = await this.profileService.findByUuid(id);
         if (!profile) {
             throw new NotFoundException(`Profile not found`);
         }
 
-        return profile !== user ? new ProfileInfoDto(profile) : new MeInfoDto(profile);
+        return id !== user.uuid ? new ProfileInfoDto(profile) : new MeInfoDto(profile);
     }
 
     @Patch()

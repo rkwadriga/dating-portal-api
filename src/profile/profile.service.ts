@@ -8,17 +8,22 @@ import {DeleteResult} from "typeorm/query-builder/result/DeleteResult";
 import {HttpErrorCodes} from "../api/api.http";
 import {FileSystemService} from "../service/fileSystem.service";
 import {Photo} from "./photo.entity";
+import {SelectQueryBuilder} from "typeorm/query-builder/SelectQueryBuilder";
 
 @Injectable()
 export class ProfileService {
     constructor(
         @InjectRepository(User)
         private readonly userRepository: Repository<User>,
+        @InjectRepository(Photo)
+        private readonly photoRepository: Repository<Photo>,
         private readonly fileSystem: FileSystemService
     ) {}
 
     public async findByUuid(uuid: string): Promise<User> {
-        return this.userRepository.findOne({uuid});
+        const user = await this.userRepository.findOne({uuid});
+        user.setAvatar(await this.getAvatar(user));
+        return user;
     }
 
     public async update(user: User, input: UpdateProfileDto): Promise<User> {
@@ -62,14 +67,28 @@ export class ProfileService {
         // Save photo image file
         const photoFilePath = await this.fileSystem.saveUserPhoto(user, file);
 
+        // Get user avatar
+        const avatar = await this.getAvatar(user);
+
         // Create new "Photo" entity (transform file's path to relative path that can be used as a relative web-link)
         let photo = new Photo();
         photo.path = photoFilePath.replace('./', '/');
         photo.size = file.size;
+        // If user has no avatar yet, set current photo as an avatar
+        photo.isAvatar = avatar === undefined;
 
         // Add new photo to user's entity
         user.addPhoto(photo);
         // Save user (it will insert the new "photo" record in DB and join it to current user)
         await this.userRepository.save(user);
+    }
+
+    public async getAvatar(user: User): Promise<Photo> {
+        return this.createPhotoBaseQuery(user).andWhere('isAvatar = 1').getOne();
+    }
+
+    private createPhotoBaseQuery(user: User): SelectQueryBuilder<Photo> {
+        return this.photoRepository.createQueryBuilder('p')
+            .where('p.userId = :userId', {userId: user.id});
     }
 }

@@ -33,10 +33,18 @@ export class User {
 
     avatarPhoto: Photo;
 
+    public setAvatar(photo: Photo) {
+        if (photo !== undefined) {
+            this.avatarPhoto = photo;
+        }
+    }
+
     public getAvatar(): Photo {
         if (this.avatarPhoto) {
             return this.avatarPhoto;
         }
+
+        console.log('WAF?!');
 
         this.photos.every(photo => {
             this.avatarPhoto = photo;
@@ -53,6 +61,10 @@ export class User {
 
         photo.user = this;
         this.photos.push(photo);
+
+        if (photo.isAvatar) {
+            this.avatarPhoto = photo;
+        }
 
         return this;
     }
