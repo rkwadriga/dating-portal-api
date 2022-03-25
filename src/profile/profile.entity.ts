@@ -1,7 +1,7 @@
 import {Column, Entity, OneToOne, PrimaryGeneratedColumn} from "typeorm";
 import {User} from "../auth/user.entity";
 
-enum Gender {
+export enum Gender {
     Male = 'Male',
     Female = 'Female',
     Other = 'Other'

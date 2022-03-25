@@ -8,7 +8,8 @@ import * as bcrypt from "bcrypt";
 import {TokenEntityDto, TokenType} from "./output/token.entity.dto";
 import {RefreshTokenDto} from "./input/refresh.token.dto";
 import {HttpErrorCodes} from "../api/api.http";
-import { v4 as uuidv4 } from 'uuid';
+import {v4 as uuidv4} from 'uuid';
+import {Profile} from "../profile/profile.entity";
 
 export const hashPassword = async (password: string): Promise<string> => {
     return await bcrypt.hash(password, 10);
@@ -20,7 +21,10 @@ export class AuthService {
         private readonly jwtService: JwtService,
 
         @InjectRepository(User)
-        private readonly userRepository: Repository<User>
+        private readonly userRepository: Repository<User>,
+
+        @InjectRepository(Profile)
+        private readonly profileRepository: Repository<Profile>
     ) {}
 
     public async createUser(input: CreateUserDto): Promise<User> {
@@ -41,6 +45,11 @@ export class AuthService {
             error = HttpErrorCodes.CONFLICT;
         }
 
+        // Check the gender value
+        if (input.gender === undefined) {
+            errors.push('Param "gender" is required');
+        }
+
         // If there is some errors - throw an 400 error
         if (errors.length > 0) {
             throw new HttpException({status, error, message: errors}, status);
@@ -52,11 +61,14 @@ export class AuthService {
         }
 
         const {id, ...partial} = input;
-        return await this.userRepository.save({
+        const user = {
             ...partial,
             uuid: id,
-            password: await hashPassword(input.password)
-        });
+            password: await hashPassword(input.password),
+            profile: await this.createProfile(input)
+        }
+
+        return await this.userRepository.save(user);
     }
 
     public getTokenForUser(user: User): TokenEntityDto {
@@ -124,5 +136,16 @@ export class AuthService {
             throw new UnauthorizedException(HttpErrorCodes.INVALID_TOKEN);
         }
         return matches[1];
+    }
+
+    private async createProfile(input: CreateUserDto): Promise<Profile>
+    {
+        const profile = {
+            gender: input.gender
+        };
+
+        input.gender = undefined;
+
+        return await this.profileRepository.save(profile);
     }
 }

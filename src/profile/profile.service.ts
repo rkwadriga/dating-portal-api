@@ -9,6 +9,7 @@ import {HttpErrorCodes} from "../api/api.http";
 import {FileSystemService} from "../service/fileSystem.service";
 import {Photo} from "./photo.entity";
 import {SelectQueryBuilder} from "typeorm/query-builder/SelectQueryBuilder";
+import {Profile} from "./profile.entity";
 
 @Injectable()
 export class ProfileService {
@@ -17,11 +18,18 @@ export class ProfileService {
         private readonly userRepository: Repository<User>,
         @InjectRepository(Photo)
         private readonly photoRepository: Repository<Photo>,
+        @InjectRepository(Profile)
+        private readonly profileRepository: Repository<Profile>,
         private readonly fileSystem: FileSystemService
     ) {}
 
     public async findByUuid(uuid: string): Promise<User> {
-        const user = await this.userRepository.findOne({uuid});
+        const user = await this.userRepository
+            .createQueryBuilder('user')
+            .leftJoinAndSelect('user.profile', 'profile')
+            .where({uuid})
+            .getOne();
+
         user.setAvatar(await this.getAvatar(user));
         return user;
     }
