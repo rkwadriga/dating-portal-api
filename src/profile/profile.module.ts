@@ -7,10 +7,11 @@ import {ProfileController} from "./profile.controller";
 import {FileSystemService} from "../service/fileSystem.service";
 import {Photo} from "./photo.entity";
 import {User} from "../auth/user.entity";
+import {Profile} from "./profile.entity";
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([User, Photo])
+        TypeOrmModule.forFeature([User, Photo, Profile])
     ],
     providers: [LocalStrategy, JwtStrategy, ProfileService, FileSystemService],
     controllers: [ProfileController]

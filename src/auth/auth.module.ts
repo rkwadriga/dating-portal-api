@@ -7,10 +7,11 @@ import {AuthService} from "./auth.service";
 import {LocalStrategy} from "./strategies/local.strategy";
 import {JwtStrategy} from "./strategies/jwt.strategy";
 import {RefreshStrategy} from "./strategies/refresh.strategy";
+import {Profile} from "../profile/profile.entity";
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([User]),
+        TypeOrmModule.forFeature([User, Profile]),
         JwtModule.registerAsync({
             useFactory: () => ({
                 secret: process.env.AUTH_SECRET,

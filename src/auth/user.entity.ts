@@ -1,6 +1,15 @@
-import {Column, Entity, OneToMany, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn} from "typeorm";
+import {
+    Column,
+    Entity,
+    OneToMany,
+    OneToOne,
+    PrimaryGeneratedColumn,
+    CreateDateColumn,
+    UpdateDateColumn,
+    JoinColumn
+} from "typeorm";
 import {Photo} from "../profile/photo.entity";
-import {Expose} from "class-transformer";
+import {Profile} from "../profile/profile.entity";
 
 @Entity()
 export class User {
@@ -30,6 +39,9 @@ export class User {
 
     @OneToMany(() => Photo, photo => photo.user, {eager: true, cascade: true})
     photos: Photo[];
+
+    @OneToOne(() => Profile, {nullable: false})
+    profile: Profile;
 
     avatarPhoto: Photo;
 

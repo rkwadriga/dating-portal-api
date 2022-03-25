@@ -1,6 +1,7 @@
 import {TypeOrmModuleOptions} from "@nestjs/typeorm";
 import {User} from "../auth/user.entity";
 import {Photo} from "../profile/photo.entity";
+import {Profile} from "../profile/profile.entity";
 
 export default (): TypeOrmModuleOptions => ({
     type: 'mysql',
@@ -12,7 +13,8 @@ export default (): TypeOrmModuleOptions => ({
     database: process.env.DB_NAME,
     entities: [
         User,
-        Photo
+        Photo,
+        Profile
     ],
     synchronize: true,
     dropSchema: Boolean(parseInt(process.env.DB_DROP_SCHEMA))
