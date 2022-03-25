@@ -44,8 +44,6 @@ export class User {
             return this.avatarPhoto;
         }
 
-        console.log('WAF?!');
-
         this.photos.every(photo => {
             this.avatarPhoto = photo;
             return !photo.isAvatar;
