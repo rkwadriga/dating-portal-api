@@ -61,14 +61,18 @@ export class AuthService {
         }
 
         const {id, ...partial} = input;
-        const user = {
+        const userParams = {
             ...partial,
             uuid: id,
-            password: await hashPassword(input.password),
-            profile: await this.createProfile(input)
+            password: await hashPassword(input.password)
         }
 
-        return await this.userRepository.save(user);
+        // Create a user account
+        const user = await this.userRepository.save(userParams);
+        // Create user's profile
+        await this.createProfile(user, input);
+
+        return user;
     }
 
     public getTokenForUser(user: User): TokenEntityDto {
@@ -138,13 +142,12 @@ export class AuthService {
         return matches[1];
     }
 
-    private async createProfile(input: CreateUserDto): Promise<Profile>
+    private async createProfile(user: User, input: CreateUserDto): Promise<Profile>
     {
         const profile = {
+            user: user,
             gender: input.gender
         };
-
-        input.gender = undefined;
 
         return await this.profileRepository.save(profile);
     }

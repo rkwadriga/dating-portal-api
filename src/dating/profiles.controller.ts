@@ -14,6 +14,12 @@ export class ProfilesController {
     @Get()
     @UseGuards(AuthGuardJwt)
     async list(@CurrentUser() user: User) {
-        return user
+        const users = await this.profilesService.getProfilesForUser(user);
+        users.forEach(user => {
+            if (user.id === 14) {
+                console.log(user);
+            }
+        })
+        return users
     }
 }

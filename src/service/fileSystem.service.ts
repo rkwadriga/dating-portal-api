@@ -23,7 +23,7 @@ export class FileSystemService {
     private getUserPhotosPath(user: User): string {
         // Create uploading dir indexed by user ID
         let dirIndex = (user.id < 1000 ? user.id : Math.round(user.id / 1000)).toString();
-        const idLength = dirIndex.length;
+        const idLength = user.id.toString().length;
         for (let i = 0; i < 4 - idLength; i++) {
             dirIndex = '0' +  dirIndex;
         }

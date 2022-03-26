@@ -40,8 +40,7 @@ export class User {
     @OneToMany(() => Photo, photo => photo.user, {eager: true, cascade: true})
     photos: Photo[];
 
-    @OneToOne(() => Profile, {nullable: false})
-    @JoinColumn()
+    @OneToOne(() => Profile, profile => profile.user)
     profile: Profile;
 
     avatarPhoto: Photo;
@@ -76,12 +75,6 @@ export class User {
         if (photo.isAvatar) {
             this.avatarPhoto = photo;
         }
-
-        return this;
-    }
-
-    public setProfile(profile: Profile): this {
-        this.profile = profile;
 
         return this;
     }

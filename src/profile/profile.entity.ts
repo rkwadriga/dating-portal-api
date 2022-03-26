@@ -1,4 +1,4 @@
-import {Column, Entity, OneToOne, PrimaryGeneratedColumn} from "typeorm";
+import {Column, Entity, JoinColumn, OneToOne, PrimaryColumn, PrimaryGeneratedColumn} from "typeorm";
 import {User} from "../auth/user.entity";
 
 export enum Gender {
@@ -9,9 +9,13 @@ export enum Gender {
 
 @Entity()
 export class Profile {
-    @PrimaryGeneratedColumn()
-    id: number;
+    @PrimaryColumn()
+    userId: number;
 
     @Column()
     gender: Gender;
+
+    @OneToOne(() => User, user => user.profile, {nullable: false})
+    @JoinColumn()
+    user: User;
 }
