@@ -59,10 +59,12 @@ export class User {
             return this.avatarPhoto;
         }
 
-        this.photos.every(photo => {
-            this.avatarPhoto = photo;
-            return !photo.isAvatar;
-        });
+        if (this.photos !== undefined) {
+            this.photos.every(photo => {
+                this.avatarPhoto = photo;
+                return !photo.isAvatar;
+            });
+        }
 
         return this.avatarPhoto;
     }
@@ -80,5 +82,11 @@ export class User {
         }
 
         return this;
+    }
+
+    public getAge(): number {
+        const diff = (new Date()).valueOf() - (new Date(this.profile.birthday)).valueOf();
+
+        return Math.ceil(diff / (1000 * 3600 * 24 * 365));
     }
 }

@@ -27,7 +27,8 @@ export class ProfileInfoDto {
             firstName: user.firstName,
             lastName: user.lastName,
             avatar: user.getAvatar()?.path,
-            gender: user.profile.gender
+            gender: user.profile.gender,
+            age: user.getAge()
         });
     }
 }
