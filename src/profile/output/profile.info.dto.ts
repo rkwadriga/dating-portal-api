@@ -1,8 +1,6 @@
 import {Expose} from "class-transformer";
 import {User} from "../../auth/user.entity";
-import {Photo} from "../photo.entity";
 import {Gender} from "../profile.entity";
-
 
 export class ProfileInfoDto {
     @Expose()
@@ -20,10 +18,14 @@ export class ProfileInfoDto {
     @Expose()
     gender: Gender;
 
+    @Expose()
+    age: number;
+
     constructor(user: User) {
         Object.assign(this, {
-            ...user,
             id: user.uuid,
+            firstName: user.firstName,
+            lastName: user.lastName,
             avatar: user.getAvatar()?.path,
             gender: user.profile.gender
         });

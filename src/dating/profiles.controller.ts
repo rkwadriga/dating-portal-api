@@ -3,6 +3,7 @@ import {ProfilesService} from "./profiles.service";
 import {AuthGuardJwt} from "../auth/guards/auth-guard.jwt";
 import {CurrentUser} from "../auth/current-user.decorator";
 import {User} from "../auth/user.entity";
+import {ProfileInfoDto} from "../profile/output/profile.info.dto";
 
 @Controller('/api/profiles')
 @SerializeOptions({strategy: 'excludeAll'})
@@ -15,11 +16,12 @@ export class ProfilesController {
     @UseGuards(AuthGuardJwt)
     async list(@CurrentUser() user: User) {
         const users = await this.profilesService.getProfilesForUser(user);
+
+        let result = [];
         users.forEach(user => {
-            if (user.id === 14) {
-                console.log(user);
-            }
-        })
-        return users
+            result.push(new ProfileInfoDto(user));
+        });
+
+        return result;
     }
 }
