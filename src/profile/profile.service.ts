@@ -10,6 +10,7 @@ import {FileSystemService} from "../service/fileSystem.service";
 import {Photo} from "./photo.entity";
 import {SelectQueryBuilder} from "typeorm/query-builder/SelectQueryBuilder";
 import {Profile} from "./profile.entity";
+import {Settings} from "./settings.entity";
 
 @Injectable()
 export class ProfileService {
@@ -20,6 +21,8 @@ export class ProfileService {
         private readonly photoRepository: Repository<Photo>,
         @InjectRepository(Profile)
         private readonly profileRepository: Repository<Profile>,
+        @InjectRepository(Settings)
+        private readonly settingsRepository: Repository<Settings>,
         private readonly fileSystem: FileSystemService
     ) {}
 
@@ -64,6 +67,12 @@ export class ProfileService {
             throw new HttpException({status, error, message: errors}, status);
         }
 
+        // Update profile
+        await this.updateProfile(user, input);
+
+        // Update settings
+        await this.updateSettings(user, input);
+
         return this.userRepository.save(Object.assign(user, input));
     }
 
@@ -98,5 +107,39 @@ export class ProfileService {
     private createPhotoBaseQuery(user: User): SelectQueryBuilder<Photo> {
         return this.photoRepository.createQueryBuilder('p')
             .where('p.userId = :userId', {userId: user.id});
+    }
+
+    private async updateProfile(user: User, input: UpdateProfileDto): Promise<void>
+    {
+        if (user.profile === undefined) {
+            user.profile = await this.profileRepository.findOne({user});
+        }
+
+        let changed = false;
+        if (user.profile.gender !== input.gender) {
+            user.profile.gender = input.gender;
+        }
+
+        if (changed) {
+            await this.profileRepository.save(user.profile);
+        }
+    }
+
+    private async updateSettings(user: User, input: UpdateProfileDto): Promise<void>
+    {
+        if (user.settings === undefined) {
+            user.settings = await this.settingsRepository.findOne({user});
+        }
+
+        let changed = false;
+        if (user.settings.showGender !== input.showGender) {
+            changed = true;
+            user.settings.showGender = input.showGender;
+        }
+
+
+        if (changed) {
+            await this.settingsRepository.save(user.settings);
+        }
     }
 }

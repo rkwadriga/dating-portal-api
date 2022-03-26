@@ -5,11 +5,11 @@ import {
     OneToOne,
     PrimaryGeneratedColumn,
     CreateDateColumn,
-    UpdateDateColumn,
-    JoinColumn
+    UpdateDateColumn
 } from "typeorm";
 import {Photo} from "../profile/photo.entity";
 import {Profile} from "../profile/profile.entity";
+import {Settings} from "../profile/settings.entity";
 
 @Entity()
 export class User {
@@ -42,6 +42,9 @@ export class User {
 
     @OneToOne(() => Profile, profile => profile.user)
     profile: Profile;
+
+    @OneToOne(() => Settings, settings => settings.user)
+    settings: Settings;
 
     avatarPhoto: Photo;
 

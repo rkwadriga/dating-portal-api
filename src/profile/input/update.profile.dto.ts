@@ -1,4 +1,5 @@
 import {IsEmail, IsString, Length, IsOptional} from "class-validator";
+import {Gender} from "../profile.entity";
 
 export class UpdateProfileDto {
     @IsEmail()
@@ -24,4 +25,14 @@ export class UpdateProfileDto {
     @Length(2, 64)
     @IsOptional()
     lastName: string;
+
+    @IsString()
+    @IsOptional()
+    @Length(4, 6)
+    gender: Gender;
+
+    @IsString()
+    @IsOptional()
+    @Length(4, 6)
+    showGender?: Gender = null;
 }

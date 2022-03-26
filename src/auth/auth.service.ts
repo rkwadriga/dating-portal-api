@@ -10,6 +10,7 @@ import {RefreshTokenDto} from "./input/refresh.token.dto";
 import {HttpErrorCodes} from "../api/api.http";
 import {v4 as uuidv4} from 'uuid';
 import {Profile} from "../profile/profile.entity";
+import {Settings} from "../profile/settings.entity";
 
 export const hashPassword = async (password: string): Promise<string> => {
     return await bcrypt.hash(password, 10);
@@ -18,13 +19,13 @@ export const hashPassword = async (password: string): Promise<string> => {
 @Injectable()
 export class AuthService {
     constructor(
-        private readonly jwtService: JwtService,
-
         @InjectRepository(User)
         private readonly userRepository: Repository<User>,
-
         @InjectRepository(Profile)
-        private readonly profileRepository: Repository<Profile>
+        private readonly profileRepository: Repository<Profile>,
+        @InjectRepository(Settings)
+        private readonly settingsRepository: Repository<Settings>,
+        private readonly jwtService: JwtService
     ) {}
 
     public async createUser(input: CreateUserDto): Promise<User> {
@@ -71,6 +72,8 @@ export class AuthService {
         const user = await this.userRepository.save(userParams);
         // Create user's profile
         await this.createProfile(user, input);
+        // Create user's settings
+        await this.createSettings(user, input);
 
         return user;
     }
@@ -144,11 +147,17 @@ export class AuthService {
 
     private async createProfile(user: User, input: CreateUserDto): Promise<Profile>
     {
-        const profile = {
+        return await this.profileRepository.save({
             user: user,
-            gender: input.gender
-        };
+            ...input
+        });
+    }
 
-        return await this.profileRepository.save(profile);
+    private async createSettings(user: User, input: CreateUserDto): Promise<Profile>
+    {
+        return await this.settingsRepository.save({
+            user: user,
+            ...input
+        });
     }
 }

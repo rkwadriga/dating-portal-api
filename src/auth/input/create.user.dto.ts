@@ -34,4 +34,9 @@ export class CreateUserDto {
     @IsString()
     @IsOptional()
     gender: Gender;
+
+    @IsString()
+    @IsOptional()
+    @Length(4, 6)
+    showGender?: Gender = null;
 }
