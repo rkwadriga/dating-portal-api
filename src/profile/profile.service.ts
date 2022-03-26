@@ -117,7 +117,12 @@ export class ProfileService {
 
         let changed = false;
         if (user.profile.gender !== input.gender) {
+            changed = true;
             user.profile.gender = input.gender;
+        }
+        if (user.profile.birthday !== input.birthday) {
+            changed = true;
+            user.profile.birthday = input.birthday;
         }
 
         if (changed) {

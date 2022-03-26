@@ -17,6 +17,9 @@ export class Profile {
     @Length(4, 6)
     gender: Gender;
 
+    @Column({type: 'date'})
+    birthday: Date;
+
     @OneToOne(() => User, user => user.profile, {nullable: false})
     @JoinColumn()
     user: User;

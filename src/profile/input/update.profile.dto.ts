@@ -35,4 +35,7 @@ export class UpdateProfileDto {
     @IsOptional()
     @Length(4, 6)
     showGender?: Gender = null;
+
+    @IsOptional()
+    birthday: Date;
 }
