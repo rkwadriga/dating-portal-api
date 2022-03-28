@@ -7,6 +7,7 @@ import ormConfig from './config/orm.config';
 import {AuthModule} from "./auth/auth.module";
 import {ProfileModule} from "./profile/profile.module";
 import {DatingModule} from "./dating/dating.module";
+import {PublicModule} from "./public/public.module";
 
 @Module({
     imports: [
@@ -19,7 +20,8 @@ import {DatingModule} from "./dating/dating.module";
         TypeOrmModule.forRootAsync({useFactory: ormConfig}),
         AuthModule,
         ProfileModule,
-        DatingModule
+        DatingModule,
+        PublicModule
     ],
     controllers: [AppController],
     providers: [AppService],

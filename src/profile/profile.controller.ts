@@ -24,7 +24,6 @@ import {MeInfoDto} from "./output/me.info.dto";
 import {UpdateProfileDto} from "./input/update.profile.dto";
 import {FileInterceptor} from "@nestjs/platform-express";
 
-
 @Controller('/api/profile')
 @SerializeOptions({strategy: 'excludeAll'})
 export class ProfileController {

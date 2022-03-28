@@ -8,6 +8,10 @@ import {User} from "../auth/user.entity";
 export class FileSystemService {
     private allowedPhotosExtensions = ['jpg', 'jpeg', 'png'];
 
+    public getImgDir(): string {
+        return process.env.UPLOAD_DIRECTORY;
+    }
+
     public async saveUserPhoto(user: User, file: Express.Multer.File): Promise<string> {
         // Generate random file name and add it to photos path
         const filePath = this.generatePhotoFilePath(user, file);
@@ -28,7 +32,7 @@ export class FileSystemService {
             dirIndex = '0' +  dirIndex;
         }
 
-        return `${process.env.UPLOAD_DIRECTORY}/${dirIndex}/${user.id}`;
+        return `${this.getImgDir()}/${dirIndex}/${user.id}`;
     }
 
     private generatePhotoFileName(file: Express.Multer.File): string {
