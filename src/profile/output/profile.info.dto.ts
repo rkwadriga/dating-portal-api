@@ -26,9 +26,13 @@ export class ProfileInfoDto {
             id: user.uuid,
             firstName: user.firstName,
             lastName: user.lastName,
-            avatar: user.getAvatar()?.path,
+            avatar: user.getAvatar()?.path ?? this.defaultAvatar(user),
             gender: user.profile.gender,
             age: user.getAge()
         });
+    }
+
+    private defaultAvatar(user: User): string {
+        return `/public/img/0000/00/${user.profile.gender}-avatar.jpg`;
     }
 }
