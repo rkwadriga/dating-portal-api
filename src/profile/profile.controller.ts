@@ -31,6 +31,13 @@ export class ProfileController {
         private readonly profileService: ProfileService
     ) {}
 
+    @Get()
+    @UseGuards(AuthGuardJwt)
+    @UseInterceptors(ClassSerializerInterceptor)
+    async findMe(@CurrentUser() user: User) {
+        return new MeInfoDto(await this.profileService.findByUuid(user.uuid));
+    }
+
     @Get('/:id')
     @UseGuards(AuthGuardJwt)
     @UseInterceptors(ClassSerializerInterceptor)
