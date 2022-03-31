@@ -9,13 +9,12 @@ export class PublicController {
         private readonly fileSystem: FileSystemService
     ) {}
 
-    @Get('/img/:sub/:userID/:path')
+    @Get('/img/:userID/:path')
     public async getImage(
-        @Param('sub') sub: string,
-        @Param('userID') userID: number,
+        @Param('userID') userID: string,
         @Param('path') path: string,
     ) {
-        const filePath = `${this.fileSystem.getImgDir()}/${sub}/${userID}/${path}`;
+        const filePath = this.fileSystem.getUserPhotosPath(userID) + '/' + path;
         const file = createReadStream(join(process.cwd(), filePath))
 
         return new StreamableFile(file);

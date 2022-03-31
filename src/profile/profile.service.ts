@@ -82,14 +82,14 @@ export class ProfileService {
 
     public async addPhoto(user: User, file: Express.Multer.File) {
         // Save photo image file
-        const photoFilePath = await this.fileSystem.saveUserPhoto(user, file);
+        const fileName = await this.fileSystem.saveUserPhoto(user, file);
 
         // Get user avatar
         const avatar = await this.getAvatar(user);
 
         // Create new "Photo" entity (transform file's path to relative path that can be used as a relative web-link)
         let photo = new Photo();
-        photo.path = photoFilePath.replace('./', '/');
+        photo.fileName = fileName;
         photo.size = file.size;
         // If user has no avatar yet, set current photo as an avatar
         photo.isAvatar = avatar === undefined;

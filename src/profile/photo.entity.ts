@@ -1,5 +1,6 @@
 import {Entity, Column, ManyToOne, PrimaryGeneratedColumn, CreateDateColumn} from "typeorm";
 import {User} from "../auth/user.entity";
+import {FileSystemService} from "../service/fileSystem.service";
 
 @Entity()
 export class Photo {
@@ -7,7 +8,7 @@ export class Photo {
     id: number;
 
     @Column({nullable: false})
-    path: string;
+    fileName: string;
 
     @Column({nullable: false})
     size: number;
