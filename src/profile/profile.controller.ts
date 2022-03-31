@@ -13,7 +13,7 @@ import {
     ClassSerializerInterceptor,
     ParseUUIDPipe,
     NotFoundException,
-    HttpStatus, UploadedFile
+    HttpStatus, UploadedFile, BadRequestException, ConflictException
 } from "@nestjs/common";
 import {ProfileService} from "./profile.service";
 import {AuthGuardJwt} from "../auth/guards/auth-guard.jwt";
@@ -70,6 +70,13 @@ export class ProfileController {
     @UseGuards(AuthGuardJwt)
     @UseInterceptors(FileInterceptor('photo')) // process.env.UPLOAD_DIRECTORY  './var/uploads'
     async uploadImage(@UploadedFile() file: Express.Multer.File, @CurrentUser() user: User) {
-        await this.profileService.addPhoto(user, file);
+        try {
+            await this.profileService.addPhoto(user, file);
+        } catch (e) {
+            if (e.message.indexOf('already exist') !== -1) {
+                throw new ConflictException(e.message);
+            }
+            throw new BadRequestException(e.message);
+        }
     }
 }
