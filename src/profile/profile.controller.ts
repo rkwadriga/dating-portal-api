@@ -23,6 +23,7 @@ import {ProfileInfoDto} from "./output/profile.info.dto";
 import {MeInfoDto} from "./output/me.info.dto";
 import {UpdateProfileDto} from "./input/update.profile.dto";
 import {FileInterceptor} from "@nestjs/platform-express";
+import {PhotoInfoDto} from "./output/photo.info.dto";
 
 @Controller('/api/profile')
 @SerializeOptions({strategy: 'excludeAll'})
@@ -48,6 +49,19 @@ export class ProfileController {
         }
 
         return id !== user.uuid ? new ProfileInfoDto(profile) : new MeInfoDto(profile);
+    }
+
+    @Get('/:id/photos')
+    @UseGuards(AuthGuardJwt)
+    @UseInterceptors(ClassSerializerInterceptor)
+    async findPhotos(@Param('id', ParseUUIDPipe) id: string) {
+        const photos = await this.profileService.getPhotosByUserUuid(id);
+
+        let result = [];
+        photos.forEach(photo => {
+            result.push(new PhotoInfoDto(photo));
+        })
+        return result;
     }
 
     @Patch()

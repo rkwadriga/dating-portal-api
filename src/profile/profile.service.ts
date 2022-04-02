@@ -105,6 +105,13 @@ export class ProfileService {
         return this.createPhotoBaseQuery(user).andWhere('isAvatar = 1').getOne();
     }
 
+    public async getPhotosByUserUuid(uuid: string): Promise<Photo[]> {
+        return this.photoRepository.createQueryBuilder('p')
+            .innerJoin('p.user', 'u')
+            .where('u.uuid = :uuid', {uuid: uuid})
+            .getMany();
+    }
+
     private createPhotoBaseQuery(user: User): SelectQueryBuilder<Photo> {
         return this.photoRepository.createQueryBuilder('p')
             .where('p.userId = :userId', {userId: user.id});
