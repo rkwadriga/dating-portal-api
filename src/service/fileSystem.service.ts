@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as MD5 from "crypto-js/md5"
 import { promisify } from 'util';
 import { User } from "../auth/user.entity";
+import {inArray} from "../helpers/array.helper";
 
 @Injectable()
 export class FileSystemService {
@@ -40,8 +41,10 @@ export class FileSystemService {
     public getUserPhotosPath(uuid: string): string {
         // Create uploading dir indexed by user ID
         let hash = uuid.replace(/-/g, 'g');
-        hash = hash.substring(0, 8) + hash.substring(hash.length - 8);
-        const dirIndex = hash.substring(2, 3) + hash.substring(13, 14);
+        const length = hash.length;
+        const halfLength = Math.round(length / 2);
+        const dirIndex = hash.substring(2, 3) + hash.substring(length - 3, length - 2);
+        hash = hash.substring(0, 5) + hash.substring(halfLength - 3, halfLength + 3) + hash.substring(length - 5);
 
         return `${this.getImgDir()}/${dirIndex}/${hash}`;
     }
@@ -60,8 +63,14 @@ export class FileSystemService {
     }
 
     private generatePhotoFileName(file: Express.Multer.File): string {
-        // Get photo extension
+        // Get photo extension and check is it allowed
         const ext = file.originalname.match(/^.+\.(\w+)$/);
+        if (!ext) {
+            throw new Error(`Invalid file name: "${file.originalname}"`);
+        }
+        if (!inArray(ext[1], this.allowedPhotosExtensions)) {
+            throw new Error(`Files with extension "${ext[1]}" are not allowed`);
+        }
 
         return this.getFileMd5(file) + '.' + ext[1];
     }

@@ -24,6 +24,7 @@ import {MeInfoDto} from "./output/me.info.dto";
 import {UpdateProfileDto} from "./input/update.profile.dto";
 import {FileInterceptor} from "@nestjs/platform-express";
 import {PhotoInfoDto} from "./output/photo.info.dto";
+import {inArray} from "../helpers/array.helper";
 
 @Controller('/api/profile')
 @SerializeOptions({strategy: 'excludeAll'})
