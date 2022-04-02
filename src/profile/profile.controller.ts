@@ -72,6 +72,9 @@ export class ProfileController {
     @UseGuards(AuthGuardJwt)
     @UseInterceptors(ClassSerializerInterceptor)
     async update(@Body() input: UpdateProfileDto, @CurrentUser() user: User) {
+        // Init user (ser user's repository, profile and settings)
+        await this.profileService.init(user, [UserInitializationItem.Profile, UserInitializationItem.Settings]);
+        // Update user's params
         await this.profileService.update(user, input);
 
         return new MeInfoDto(user);
