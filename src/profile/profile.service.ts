@@ -11,6 +11,14 @@ import {Photo} from "./photo.entity";
 import {SelectQueryBuilder} from "typeorm/query-builder/SelectQueryBuilder";
 import {Profile} from "./profile.entity";
 import {Settings} from "./settings.entity";
+import {bytesToReadable} from "../helpers/string.helper";
+import {inArray} from "../helpers/array.helper";
+
+export enum UserInitializationItem {
+    Settings,
+    Profile,
+    Photos
+}
 
 @Injectable()
 export class ProfileService {
@@ -25,6 +33,18 @@ export class ProfileService {
         private readonly settingsRepository: Repository<Settings>,
         private readonly fileSystem: FileSystemService
     ) {}
+
+    public async init(user: User, initItems: UserInitializationItem[] = []) {
+        if ((initItems.length === 0 || inArray(UserInitializationItem.Profile, initItems)) && user.profile === undefined) {
+            user.profile = await this.profileRepository.findOne({user});
+        }
+        if ((initItems.length === 0 || inArray(UserInitializationItem.Settings, initItems)) && user.settings === undefined) {
+            user.settings = await this.settingsRepository.findOne({user});
+        }
+        if ((initItems.length === 0 || inArray(UserInitializationItem.Photos, initItems)) && user.photos === undefined) {
+            user.photos = await this.photoRepository.find({user});
+        }
+    }
 
     public async findByUuid(uuid: string): Promise<User> {
         const user = await this.userRepository
@@ -82,6 +102,22 @@ export class ProfileService {
     }
 
     public async addPhoto(user: User, file: Express.Multer.File) {
+        // Get file size and files count limits for user
+        const userSettings = user.settings ?? await this.settingsRepository.findOne({user});
+        const userMaximumImageSIze = userSettings.maximumImageSIze ?? Number(process.env.DEFAULT_USER_MAX_IMAGE_SIZE);
+        const userImagesLimit = userSettings.imagesLimit ?? Number(process.env.DEFAULT_USER_IMAGES_LIMIT);
+
+        // Check is file is not too big
+        if (file.size > userMaximumImageSIze) {
+            throw new Error(`File is to big (filesize is ${bytesToReadable(file.size)}, maximum size: ${bytesToReadable(userMaximumImageSIze)})`);
+        }
+
+        // Check is user can upload one more file
+        const photosCount = user.photos.length ?? await this.photoRepository.count({user});
+        if (photosCount >= userImagesLimit) {
+            throw new Error(`User already has a maximum (${photosCount}) photos uploaded`);
+        }
+
         // Save photo image file
         const fileName = await this.fileSystem.saveUserPhoto(user, file);
 
@@ -97,12 +133,13 @@ export class ProfileService {
 
         // Add new photo to user's entity
         user.addPhoto(photo);
+
         // Save user (it will insert the new "photo" record in DB and join it to current user)
         await this.userRepository.save(user);
     }
 
     public async getAvatar(user: User): Promise<Photo> {
-        return this.createPhotoBaseQuery(user).andWhere('isAvatar = 1').getOne();
+        return user.getAvatar() ?? await this.createPhotoBaseQuery(user).andWhere('isAvatar = 1').getOne();
     }
 
     public async getPhotosByUserUuid(uuid: string): Promise<Photo[]> {

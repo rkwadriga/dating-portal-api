@@ -46,7 +46,7 @@ export class User {
     @OneToOne(() => Settings, settings => settings.user)
     settings: Settings;
 
-    avatarPhoto: Photo;
+    avatarPhoto?: Photo;
 
     public setAvatar(photo: Photo) {
         if (photo !== undefined) {
@@ -54,7 +54,7 @@ export class User {
         }
     }
 
-    public getAvatar(): Photo {
+    public getAvatar(): Photo | undefined {
         if (this.avatarPhoto) {
             return this.avatarPhoto;
         }

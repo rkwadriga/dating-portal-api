@@ -1,21 +1,24 @@
 import {
-    Controller,
+    BadRequestException,
     Body,
-    Param,
-    Get,
-    Post,
-    Patch,
-    Delete,
-    HttpCode,
-    SerializeOptions,
-    UseGuards,
-    UseInterceptors,
     ClassSerializerInterceptor,
-    ParseUUIDPipe,
+    ConflictException,
+    Controller,
+    Delete,
+    Get,
+    HttpCode,
+    HttpStatus,
     NotFoundException,
-    HttpStatus, UploadedFile, BadRequestException, ConflictException
+    Param,
+    ParseUUIDPipe,
+    Patch,
+    Post,
+    SerializeOptions,
+    UploadedFile,
+    UseGuards,
+    UseInterceptors
 } from "@nestjs/common";
-import {ProfileService} from "./profile.service";
+import {ProfileService, UserInitializationItem} from "./profile.service";
 import {AuthGuardJwt} from "../auth/guards/auth-guard.jwt";
 import {CurrentUser} from "../auth/current-user.decorator";
 import {User} from "../auth/user.entity";
@@ -24,7 +27,7 @@ import {MeInfoDto} from "./output/me.info.dto";
 import {UpdateProfileDto} from "./input/update.profile.dto";
 import {FileInterceptor} from "@nestjs/platform-express";
 import {PhotoInfoDto} from "./output/photo.info.dto";
-import {inArray} from "../helpers/array.helper";
+
 
 @Controller('/api/profile')
 @SerializeOptions({strategy: 'excludeAll'})
@@ -85,6 +88,8 @@ export class ProfileController {
     @UseGuards(AuthGuardJwt)
     @UseInterceptors(FileInterceptor('photo')) // process.env.UPLOAD_DIRECTORY  './var/uploads'
     async uploadImage(@UploadedFile() file: Express.Multer.File, @CurrentUser() user: User) {
+        // Init user (ser user's repository, settings and photos)
+        await this.profileService.init(user, [UserInitializationItem.Photos, UserInitializationItem.Settings]);
         try {
             await this.profileService.addPhoto(user, file);
         } catch (e) {
