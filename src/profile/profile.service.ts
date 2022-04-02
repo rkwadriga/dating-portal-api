@@ -30,6 +30,7 @@ export class ProfileService {
         const user = await this.userRepository
             .createQueryBuilder('user')
             .leftJoinAndSelect('user.profile', 'profile')
+            .leftJoinAndSelect('user.settings', 'settings')
             .where({uuid})
             .getOne();
 

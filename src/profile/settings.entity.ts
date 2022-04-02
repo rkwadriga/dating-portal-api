@@ -3,7 +3,6 @@ import {User} from "../auth/user.entity";
 import {Gender} from "./profile.entity";
 import {Length} from "class-validator";
 
-
 @Entity()
 export class Settings {
     @PrimaryColumn()
@@ -12,6 +11,12 @@ export class Settings {
     @Column({nullable: true})
     @Length(4, 6)
     showGender?: Gender;
+
+    @Column({nullable: true})
+    imagesLimit: number;
+
+    @Column({nullable: true})
+    maximumImageSIze: number;
 
     @OneToOne(() => User, user => user.settings, {nullable: false})
     @JoinColumn()
