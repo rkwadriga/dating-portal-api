@@ -3,7 +3,7 @@ import {Photo} from "../photo.entity";
 
 export class PhotoInfoDto {
     @Expose()
-    fileName: string;
+    name: string;
 
     @Expose()
     isAvatar: boolean;
@@ -12,7 +12,7 @@ export class PhotoInfoDto {
     size: number;
 
     constructor(photo: Photo) {
-        this.fileName = photo.fileName;
+        this.name = photo.fileName;
         this.isAvatar = photo.isAvatar;
         this.size = photo.size;
     }
