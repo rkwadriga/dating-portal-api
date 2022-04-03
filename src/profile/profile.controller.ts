@@ -112,5 +112,6 @@ export class ProfileController {
         } catch (e) {
             throw new BadRequestException(e.message);
         }
+        return {};
     }
 }

@@ -9,6 +9,10 @@ export const base64ToFile = (name: string, size: number, base64Data: string): Ex
         throw new Error(`Invalid file name "${name}": missed extension`);
     }
 
+    base64Data = base64Data
+        .replace('data:application/octet-stream;base64', '')
+        .replace('data:image/jpeg;base64,', '');
+
     return  {
         fieldname: 'photo',
         originalname: name,
@@ -19,6 +23,6 @@ export const base64ToFile = (name: string, size: number, base64Data: string): Ex
         destination: undefined,
         filename: name,
         path: undefined,
-        buffer: Buffer.from(base64Data.replace('data:image/jpeg;base64,', ''), 'base64')
+        buffer: Buffer.from(base64Data, 'base64')
     }
 }
