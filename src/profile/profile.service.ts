@@ -12,12 +12,21 @@ import {SelectQueryBuilder} from "typeorm/query-builder/SelectQueryBuilder";
 import {Profile} from "./profile.entity";
 import {Settings} from "./settings.entity";
 import {bytesToReadable} from "../helpers/string.helper";
-import {inArray} from "../helpers/array.helper";
+import {inArray, removeByIndex} from "../helpers/array.helper";
+import {base64ToFile} from "../helpers/file.helper";
+import {throwError} from "rxjs";
 
 export enum UserInitializationItem {
     Settings,
     Profile,
     Photos
+}
+
+export interface ImageData {
+    name: string,
+    src: string,
+    size: number,
+    isAvatar?: boolean
 }
 
 @Injectable()
@@ -102,18 +111,15 @@ export class ProfileService {
     }
 
     public async addPhoto(user: User, file: Express.Multer.File) {
-        // Get file size and files count limits for user
-        const userSettings = user.settings ?? await this.settingsRepository.findOne({user});
-        const userMaximumImageSIze = userSettings.maximumImageSIze ?? Number(process.env.DEFAULT_USER_MAX_IMAGE_SIZE);
-        const userImagesLimit = userSettings.imagesLimit ?? Number(process.env.DEFAULT_USER_IMAGES_LIMIT);
-
         // Check is file is not too big
+        const userMaximumImageSIze = await this.getUserMaximumImageSize(user);
         if (file.size > userMaximumImageSIze) {
-            throw new Error(`File is to big (filesize is ${bytesToReadable(file.size)}, maximum size: ${bytesToReadable(userMaximumImageSIze)})`);
+            throw new Error(`File is too big (filesize is ${bytesToReadable(file.size)}, maximum size: ${bytesToReadable(userMaximumImageSIze)})`);
         }
 
         // Check is user can upload one more file
-        const photosCount = user.photos.length ?? await this.photoRepository.count({user});
+        const photosCount = await this.getUserImagesCount(user);
+        const userImagesLimit = await this.getUserImagesLimit(user);
         if (photosCount >= userImagesLimit) {
             throw new Error(`User already has a maximum (${photosCount}) photos uploaded`);
         }
@@ -138,7 +144,57 @@ export class ProfileService {
         await this.userRepository.save(user);
     }
 
-    public async getAvatar(user: User): Promise<Photo> {
+    public async setPhotos(user: User, photos: ImageData[]) {
+        if (photos.length === 0) {
+            return;
+        }
+
+        const userMaximumImageSIze = await this.getUserMaximumImageSize(user);
+        let files: Express.Multer.File[] = [];
+
+        // Find new avatar among photos
+        photos.some((photo, index) => {
+            if (photo.isAvatar) {
+                // Check the avatar size
+                if (photo.size > userMaximumImageSIze) {
+                    throw new Error(`File "${photo.name}" is too big (filesize is ${bytesToReadable(photo.size)}, maximum size: ${bytesToReadable(userMaximumImageSIze)})`);
+                }
+                // Remove and avatar from photos
+                removeByIndex(index, photos);
+                // Add new avatar as first "files" array's element
+                files.push(base64ToFile(photo.name, photo.size, photo.src));
+                return true;
+            }
+        });
+
+        // Convert photos of File objects nad add them to images array
+        photos.forEach(photo => {
+            // Check the photo size
+            if (photo.size > userMaximumImageSIze) {
+                throw new Error(`File "${photo.name}" is too big (filesize is ${bytesToReadable(photo.size)}, maximum size: ${bytesToReadable(userMaximumImageSIze)})`);
+            }
+            // Add photo to files array
+            files.push(base64ToFile(photo.name, photo.size, photo.src));
+        });
+
+        // Check is user can upload this count of photos
+        const userImagesLimit = await this.getUserImagesLimit(user);
+        if (files.length > userImagesLimit) {
+            throw new Error(`Can not upload more than (${userImagesLimit}) photos`);
+        }
+
+        // Remove old user's photos
+        this.fileSystem.removeUserPhotos(user.uuid);
+        await this.photoRepository.delete({user});
+        user.photos = [];
+
+        // Add new images
+        for (const file of files) {
+            await this.addPhoto(user, file);
+        }
+    }
+
+    public async getAvatar(user: User): Promise<Photo | undefined> {
         return user.getAvatar() ?? await this.createPhotoBaseQuery(user).andWhere('isAvatar = 1').getOne();
     }
 
@@ -154,8 +210,7 @@ export class ProfileService {
             .where('p.userId = :userId', {userId: user.id});
     }
 
-    private async updateProfile(user: User, input: UpdateProfileDto): Promise<void>
-    {
+    private async updateProfile(user: User, input: UpdateProfileDto): Promise<void> {
         if (user.profile === undefined) {
             user.profile = await this.profileRepository.findOne({user});
         }
@@ -175,8 +230,7 @@ export class ProfileService {
         }
     }
 
-    private async updateSettings(user: User, input: UpdateProfileDto): Promise<void>
-    {
+    private async updateSettings(user: User, input: UpdateProfileDto): Promise<void> {
         if (user.settings === undefined) {
             user.settings = await this.settingsRepository.findOne({user});
         }
@@ -191,5 +245,19 @@ export class ProfileService {
         if (changed) {
             await this.settingsRepository.save(user.settings);
         }
+    }
+
+    private async getUserMaximumImageSize(user: User): Promise<number> {
+        const userSettings = user.settings ?? await this.settingsRepository.findOne({user});
+        return  userSettings.maximumImageSIze ?? Number(process.env.DEFAULT_USER_MAX_IMAGE_SIZE);
+    }
+
+    private async getUserImagesLimit(user: User): Promise<number> {
+        const userSettings = user.settings ?? await this.settingsRepository.findOne({user});
+        return userSettings.imagesLimit ?? Number(process.env.DEFAULT_USER_IMAGES_LIMIT);
+    }
+
+    private async getUserImagesCount(user: User): Promise<number> {
+        return user.photos.length ?? await this.photoRepository.count({user});
     }
 }

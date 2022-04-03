@@ -55,7 +55,7 @@ export class User {
     }
 
     public getAvatar(): Photo | undefined {
-        if (this.avatarPhoto) {
+        if (this.avatarPhoto !== undefined) {
             return this.avatarPhoto;
         }
 

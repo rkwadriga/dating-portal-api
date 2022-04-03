@@ -4,6 +4,7 @@ import * as MD5 from "crypto-js/md5"
 import { promisify } from 'util';
 import { User } from "../auth/user.entity";
 import {inArray} from "../helpers/array.helper";
+import {getFileExt} from "../helpers/file.helper";
 
 @Injectable()
 export class FileSystemService {
@@ -49,6 +50,10 @@ export class FileSystemService {
         return `${this.getImgDir()}/${dirIndex}/${hash}`;
     }
 
+    public removeUserPhotos(uuid: string): void {
+        this.delete(this.getUserPhotosPath(uuid));
+    }
+
     private getFileMd5(file: Express.Multer.File): string {
         let fileContent;
         if (file.size > this.md5Buffer * 2) {
@@ -64,15 +69,15 @@ export class FileSystemService {
 
     private generatePhotoFileName(file: Express.Multer.File): string {
         // Get photo extension and check is it allowed
-        const ext = file.originalname.match(/^.+\.(\w+)$/);
-        if (!ext) {
+        const ext = getFileExt(file.originalname);
+        if (ext === null) {
             throw new Error(`Invalid file name: "${file.originalname}"`);
         }
-        if (!inArray(ext[1], this.allowedPhotosExtensions)) {
-            throw new Error(`Files with extension "${ext[1]}" are not allowed`);
+        if (!inArray(ext, this.allowedPhotosExtensions)) {
+            throw new Error(`Files with extension "${ext}" are not allowed`);
         }
 
-        return this.getFileMd5(file) + '.' + ext[1];
+        return this.getFileMd5(file) + '.' + ext;
     }
 
     private createDir(path: string): void {
@@ -87,5 +92,17 @@ export class FileSystemService {
                 fs.mkdirSync(createdPath);
             }
         });
+    }
+
+    private delete(path: string): void {
+        if (!fs.existsSync(path)) {
+            return;
+
+        }
+        if (fs.lstatSync(path).isDirectory()) {
+            fs.rmdirSync(path, {recursive: true});
+        } else {
+            fs.unlinkSync(path);
+        }
     }
 }

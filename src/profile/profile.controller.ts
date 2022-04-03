@@ -18,7 +18,7 @@ import {
     UseGuards,
     UseInterceptors
 } from "@nestjs/common";
-import {ProfileService, UserInitializationItem} from "./profile.service";
+import {ProfileService, UserInitializationItem, ImageData} from "./profile.service";
 import {AuthGuardJwt} from "../auth/guards/auth-guard.jwt";
 import {CurrentUser} from "../auth/current-user.decorator";
 import {User} from "../auth/user.entity";
@@ -27,7 +27,6 @@ import {MeInfoDto} from "./output/me.info.dto";
 import {UpdateProfileDto} from "./input/update.profile.dto";
 import {FileInterceptor} from "@nestjs/platform-express";
 import {PhotoInfoDto} from "./output/photo.info.dto";
-
 
 @Controller('/api/profile')
 @SerializeOptions({strategy: 'excludeAll'})
@@ -89,8 +88,8 @@ export class ProfileController {
 
     @Post('/:id/photo')
     @UseGuards(AuthGuardJwt)
-    @UseInterceptors(FileInterceptor('photo')) // process.env.UPLOAD_DIRECTORY  './var/uploads'
-    async uploadImage(@UploadedFile() file: Express.Multer.File, @CurrentUser() user: User) {
+    @UseInterceptors(FileInterceptor('photo'))
+    async uploadPhoto(@UploadedFile() file: Express.Multer.File, @CurrentUser() user: User) {
         // Init user (ser user's repository, settings and photos)
         await this.profileService.init(user, [UserInitializationItem.Photos, UserInitializationItem.Settings]);
         try {
@@ -99,6 +98,18 @@ export class ProfileController {
             if (e.message.indexOf('already exist') !== -1) {
                 throw new ConflictException(e.message);
             }
+            throw new BadRequestException(e.message);
+        }
+    }
+
+    @Post('/photos')
+    @UseGuards(AuthGuardJwt)
+    async uploadPhotos(@Body() photos: ImageData[], @CurrentUser() user: User) {
+        // Init user's photos and settings
+        await this.profileService.init(user, [UserInitializationItem.Photos, UserInitializationItem.Settings]);
+        try {
+            await this.profileService.setPhotos(user, photos);
+        } catch (e) {
             throw new BadRequestException(e.message);
         }
     }
