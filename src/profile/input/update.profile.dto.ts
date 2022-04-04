@@ -38,4 +38,9 @@ export class UpdateProfileDto {
 
     @IsOptional()
     birthday: Date;
+
+    @IsString()
+    @IsOptional()
+    @Length(2, 5000)
+    about: string;
 }

@@ -224,6 +224,10 @@ export class ProfileService {
             changed = true;
             user.profile.birthday = input.birthday;
         }
+        if (user.profile.about !== input.about) {
+            changed = true;
+            user.profile.about = input.about;
+        }
 
         if (changed) {
             await this.profileRepository.save(user.profile);
@@ -240,7 +244,6 @@ export class ProfileService {
             changed = true;
             user.settings.showGender = input.showGender;
         }
-
 
         if (changed) {
             await this.settingsRepository.save(user.settings);

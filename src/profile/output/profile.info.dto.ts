@@ -21,6 +21,9 @@ export class ProfileInfoDto {
     @Expose()
     age: number;
 
+    @Expose()
+    about: string;
+
     constructor(user: User) {
         Object.assign(this, {
             id: user.uuid,
@@ -28,7 +31,8 @@ export class ProfileInfoDto {
             lastName: user.lastName,
             avatar: user.getAvatar()?.fileName,
             gender: user.profile.gender,
-            age: user.getAge()
+            age: user.getAge(),
+            about: user.profile.about
         });
     }
 }

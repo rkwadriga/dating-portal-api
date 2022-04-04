@@ -20,6 +20,10 @@ export class Profile {
     @Column({type: 'date'})
     birthday: Date;
 
+    @Column({nullable: true, type: "text"})
+    @Length(2, 5000)
+    about?: string;
+
     @OneToOne(() => User, user => user.profile, {nullable: false})
     @JoinColumn()
     user: User;
