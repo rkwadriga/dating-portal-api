@@ -29,7 +29,7 @@ export class ProfileInfoDto {
             id: user.uuid,
             firstName: user.firstName,
             lastName: user.lastName,
-            avatar: user.getAvatar()?.fileName,
+            avatar: user.getAvatar()?.fileName ?? process.env.DEFAULT_AVATAR_FILE_NAME,
             gender: user.profile.gender,
             age: user.getAge(),
             about: user.profile.about

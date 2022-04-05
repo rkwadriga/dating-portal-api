@@ -1,15 +1,23 @@
 import {Injectable} from "@nestjs/common";
 import * as fs from 'fs';
 import * as MD5 from "crypto-js/md5"
-import { promisify } from 'util';
-import { User } from "../auth/user.entity";
+import {promisify} from 'util';
+import {User} from "../auth/user.entity";
 import {inArray} from "../helpers/array.helper";
 import {getFileExt} from "../helpers/file.helper";
+import {Repository} from 'typeorm';
+import {InjectRepository} from "@nestjs/typeorm";
+import {Gender} from "../profile/profile.entity";
 
 @Injectable()
 export class FileSystemService {
     private allowedPhotosExtensions = ['jpg', 'jpeg', 'png'];
     private md5Buffer = 1024;
+
+    constructor(
+        @InjectRepository(User)
+        private readonly userRepository: Repository<User>,
+    ) { }
 
     public getImgDir(): string {
         return process.env.UPLOAD_DIRECTORY;
@@ -48,6 +56,18 @@ export class FileSystemService {
         hash = hash.substring(0, 5) + hash.substring(halfLength - 3, halfLength + 3) + hash.substring(length - 5);
 
         return `${this.getImgDir()}/${dirIndex}/${hash}`;
+    }
+
+    public async getDefaultAvatar(uuid: string): Promise<string> {
+        const genderData = await this.userRepository
+            .createQueryBuilder('u')
+            .select('p.gender', 'gender')
+            .innerJoin('u.profile', 'p')
+            .where({uuid})
+            .getRawOne();
+        const gender = genderData ? genderData.gender : Gender.Other;
+
+        return `${this.getDefaultImgPath()}/${gender}.jpeg`;
     }
 
     public removeUserPhotos(uuid: string): void {
@@ -104,5 +124,9 @@ export class FileSystemService {
         } else {
             fs.unlinkSync(path);
         }
+    }
+
+    private getDefaultImgPath(): string {
+        return this.getImgDir() + '/' + process.env.DEFAULT_AVATAR_PATH;
     }
 }

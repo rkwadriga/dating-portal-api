@@ -14,7 +14,12 @@ export class PublicController {
         @Param('userID') userID: string,
         @Param('path') path: string,
     ) {
-        const filePath = this.fileSystem.getUserPhotosPath(userID) + '/' + path;
+        let filePath: string;
+        if (path === process.env.DEFAULT_AVATAR_FILE_NAME) {
+            filePath = await this.fileSystem.getDefaultAvatar(userID);
+        } else {
+            filePath = this.fileSystem.getUserPhotosPath(userID) + '/' + path;
+        }
 
         // Check is file exist
         if (!this.fileSystem.fileExist(filePath)) {
