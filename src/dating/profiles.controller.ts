@@ -1,15 +1,17 @@
-import {Controller, Get, NotFoundException, SerializeOptions, UseGuards} from "@nestjs/common";
+import {Controller, Delete, Get, NotFoundException, SerializeOptions, UseGuards} from "@nestjs/common";
 import {ProfilesService} from "./profiles.service";
 import {AuthGuardJwt} from "../auth/guards/auth-guard.jwt";
 import {CurrentUser} from "../auth/current-user.decorator";
 import {User} from "../auth/user.entity";
 import {ProfileInfoDto} from "./output/profile.info.dto";
+import {DatingService} from "./dating.service";
 
 @Controller('/api/dating/profiles')
 @SerializeOptions({strategy: 'excludeAll'})
 export class ProfilesController {
     constructor (
-        private readonly profilesService: ProfilesService
+        private readonly profilesService: ProfilesService,
+        private readonly datingService: DatingService
     ) {}
 
     @Get('/next')
@@ -21,5 +23,13 @@ export class ProfilesController {
         }
 
         return new ProfileInfoDto(nextProfile);
+    }
+
+    @Delete()
+    @UseGuards(AuthGuardJwt)
+    async clearDatings(@CurrentUser() user: User) {
+        await this.datingService.clearDatingsForUser(user);
+
+        return {};
     }
 }
