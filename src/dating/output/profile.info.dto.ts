@@ -4,7 +4,7 @@ import {ProfileInfoDto as BaseDto} from "../../profile/output/profile.info.dto";
 
 export class ProfileInfoDto extends BaseDto {
     @Expose()
-    images: string[] = [];
+    photos: string[] = [];
 
     constructor(user: User) {
         super(user);
@@ -13,11 +13,11 @@ export class ProfileInfoDto extends BaseDto {
         }
 
         if (this.avatar !== undefined) {
-            this.images.push(this.avatar);
+            this.photos.push(this.avatar);
         }
         for (const photo of user.photos) {
             if (!photo.isAvatar) {
-                this.images.push(photo.fileName);
+                this.photos.push(photo.fileName);
             }
         }
 

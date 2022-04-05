@@ -39,9 +39,9 @@ export class ProfilesService {
             .where(condition, parameters)
             .getOne();
 
-        if (nextProfile !== undefined) {
+        /*if (nextProfile !== undefined) {
             await this.datingRepository.save({fromUser: user, toUser: nextProfile});
-        }
+        }*/
 
         return nextProfile ?? null;
     }
