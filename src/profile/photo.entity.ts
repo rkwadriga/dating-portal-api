@@ -1,13 +1,12 @@
-import {Entity, Column, ManyToOne, PrimaryGeneratedColumn, CreateDateColumn} from "typeorm";
+import {Entity, Column, ManyToOne, PrimaryColumn, CreateDateColumn, JoinColumn} from "typeorm";
 import {User} from "../auth/user.entity";
-import {FileSystemService} from "../service/fileSystem.service";
 
 @Entity()
 export class Photo {
-    @PrimaryGeneratedColumn()
-    id: number;
+    @PrimaryColumn()
+    userId: number;
 
-    @Column({nullable: false})
+    @PrimaryColumn()
     fileName: string;
 
     @Column({nullable: false})
@@ -20,5 +19,6 @@ export class Photo {
     createdAd: Date;
 
     @ManyToOne(() => User, user => user.photos, {nullable: false})
+    @JoinColumn()
     user: User;
 }

@@ -10,6 +10,7 @@ import {
 import {Photo} from "../profile/photo.entity";
 import {Profile} from "../profile/profile.entity";
 import {Settings} from "../profile/settings.entity";
+import {Dating} from "../dating/dating.entity";
 
 @Entity()
 export class User {
@@ -47,6 +48,12 @@ export class User {
     settings: Settings;
 
     avatarPhoto?: Photo;
+
+    @OneToMany(() => Dating, datingFrom => datingFrom.fromUser)
+    datingFrom: Dating[];
+
+    @OneToMany(() => Dating, datingTo => datingTo.toUser)
+    datingTo: Dating[];
 
     public setAvatar(photo: Photo) {
         if (photo !== undefined) {

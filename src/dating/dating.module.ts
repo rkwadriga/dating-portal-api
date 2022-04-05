@@ -8,10 +8,11 @@ import {ProfilesService} from "./profiles.service";
 import {ProfilesController} from "./profiles.controller";
 import {Profile} from "../profile/profile.entity";
 import {Settings} from "../profile/settings.entity";
+import {Dating} from "./dating.entity";
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([User, Photo, Profile, Settings])
+        TypeOrmModule.forFeature([User, Photo, Profile, Settings, Dating])
     ],
     providers: [LocalStrategy, JwtStrategy, ProfilesService],
     controllers: [ProfilesController]
