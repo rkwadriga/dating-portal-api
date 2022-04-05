@@ -30,6 +30,7 @@ import {FileInterceptor} from "@nestjs/platform-express";
 import {PhotoInfoDto} from "./output/photo.info.dto";
 import {CheckPasswordDto} from "./input/check.password.dto";
 import * as bcrypt from 'bcrypt';
+import {UpdatePasswordDto} from "./input/update.password.dto";
 
 @Controller('/api/profile')
 @SerializeOptions({strategy: 'excludeAll'})
@@ -123,5 +124,16 @@ export class ProfileController {
     async checkPassword(@Body() input: CheckPasswordDto,  @CurrentUser() user: User) {
         const isMatch = await bcrypt.compare(input.password, user.password);
         return {result: isMatch};
+    }
+
+    @Patch('/password')
+    @UseGuards(AuthGuardJwt)
+    async updatePassword(@Body() input: UpdatePasswordDto,  @CurrentUser() user: User) {
+        try {
+            await this.profileService.updatePassword(user, input);
+        } catch (e) {
+            throw new BadRequestException(e.message);
+        }
+        return {};
     }
 }

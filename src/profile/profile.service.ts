@@ -15,6 +15,8 @@ import {bytesToReadable} from "../helpers/string.helper";
 import {inArray, removeByIndex} from "../helpers/array.helper";
 import {base64ToFile} from "../helpers/file.helper";
 import {throwError} from "rxjs";
+import {UpdatePasswordDto} from "./input/update.password.dto";
+import * as bcrypt from "bcrypt";
 
 export enum UserInitializationItem {
     Settings,
@@ -71,16 +73,6 @@ export class ProfileService {
         let errors: Array<string> = [];
         let status = HttpStatus.UNPROCESSABLE_ENTITY;
         let error = HttpErrorCodes.UNPROCESSABLE_ENTITY;
-
-        // Check the "retype password" field
-        if (input.password) {
-            if (input.password !== input.retypedPassword) {
-                errors.push('Passwords are not identical');
-            } else {
-                input.password = await hashPassword(input.password);
-                input.retypedPassword = undefined;
-            }
-        }
 
         // Check if "id" or "uud" field are defined
         if (input['id'] !== undefined) {
@@ -203,6 +195,21 @@ export class ProfileService {
             .innerJoin('p.user', 'u')
             .where('u.uuid = :uuid', {uuid: uuid})
             .getMany();
+    }
+
+    public async updatePassword(user: User, data: UpdatePasswordDto) {
+        // Check old password
+        const isMatch = await bcrypt.compare(data.oldPassword, user.password);
+        if (!isMatch) {
+            throw new Error('Invalid current password');
+        }
+        // Compare passwords
+        if (data.password !== data.retypedPassword) {
+            throw new Error('Passwords are not match');
+        }
+        // Update password
+        user.password = await hashPassword(data.password);
+        await this.userRepository.save(user);
     }
 
     private createPhotoBaseQuery(user: User): SelectQueryBuilder<Photo> {
