@@ -198,14 +198,18 @@ export class ProfileService {
     }
 
     public async updatePassword(user: User, data: UpdatePasswordDto) {
+        // Compare passwords
+        if (data.password !== data.retypedPassword) {
+            throw new Error('Passwords are not match');
+        }
+        // Check is password is new
+        if (data.password === data.oldPassword) {
+            throw new Error('Create a new password');
+        }
         // Check old password
         const isMatch = await bcrypt.compare(data.oldPassword, user.password);
         if (!isMatch) {
             throw new Error('Invalid current password');
-        }
-        // Compare passwords
-        if (data.password !== data.retypedPassword) {
-            throw new Error('Passwords are not match');
         }
         // Update password
         user.password = await hashPassword(data.password);
