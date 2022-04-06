@@ -19,6 +19,15 @@ export class ProfilesService {
         private readonly datingRepository: Repository<Dating>
     ) {}
 
+    public async getProfileInfoByUuid(uuid: string): Promise<User | null> {
+        return await this.userRepository
+            .createQueryBuilder('user')
+            .leftJoinAndSelect('user.profile', 'profile')
+            .leftJoinAndSelect('user.photos', 'photos')
+            .where('uuid = :uuid', {uuid})
+            .getOne();
+    }
+
     public async getNextProfileForUser(user: User): Promise<User | null>
     {
         if (user.settings === undefined) {
