@@ -14,7 +14,6 @@ import {CurrentUser} from "../auth/current-user.decorator";
 import {User} from "../auth/user.entity";
 import {ProfileInfoDto} from "./output/profile.info.dto";
 import {DatingService} from "./dating.service";
-import {MeInfoDto} from "../profile/output/me.info.dto";
 
 @Controller('/api/dating/profiles')
 @SerializeOptions({strategy: 'excludeAll'})
