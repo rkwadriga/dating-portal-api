@@ -1,6 +1,11 @@
 import {Column, Entity, JoinColumn, ManyToOne, PrimaryColumn} from "typeorm";
 import {User} from "../auth/user.entity";
 
+export enum ContactType {
+    PAIR,
+    LIKE
+}
+
 @Entity()
 export class Dating {
     @PrimaryColumn()
@@ -17,6 +22,6 @@ export class Dating {
     @JoinColumn()
     toUser: User;
 
-    @Column({nullable: false, default: false})
-    isPair: boolean;
+    @Column({nullable: true})
+    type: ContactType;
 }

@@ -3,10 +3,11 @@ import {
     Controller,
     Delete,
     Get,
+    Put,
     NotFoundException, Param, ParseUUIDPipe,
     SerializeOptions,
     UseGuards,
-    UseInterceptors
+    UseInterceptors, BadRequestException
 } from "@nestjs/common";
 import {ProfilesService} from "./profiles.service";
 import {AuthGuardJwt} from "../auth/guards/auth-guard.jwt";
@@ -63,5 +64,21 @@ export class ProfilesController {
         }
 
         return new ProfileInfoDto(profile);
+    }
+
+    @Put('/:id/like')
+    @UseGuards(AuthGuardJwt)
+    async like(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
+        try {
+            await this.datingService.like(user, id);
+        } catch (e) {
+            if (e.message.includes('not found')) {
+                throw new NotFoundException(`User ${id} not found`);
+            } else {
+                throw new BadRequestException(`Can not like user ${id}: ${e.message}`);
+            }
+        }
+
+        return {};
     }
 }
