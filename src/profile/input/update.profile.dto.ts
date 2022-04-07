@@ -1,5 +1,5 @@
 import {IsEmail, IsString, Length, IsOptional} from "class-validator";
-import {Gender} from "../profile.entity";
+import {Gender, Orientation} from "../profile.entity";
 
 export class UpdateProfileDto {
     @IsEmail()
@@ -20,6 +20,11 @@ export class UpdateProfileDto {
     @IsOptional()
     @Length(4, 6)
     gender: Gender;
+
+    @IsString()
+    @IsOptional()
+    @Length(3, 8)
+    orientation: Orientation;
 
     @IsString()
     @IsOptional()

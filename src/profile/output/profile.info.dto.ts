@@ -1,6 +1,6 @@
 import {Expose} from "class-transformer";
 import {User} from "../../auth/user.entity";
-import {Gender} from "../profile.entity";
+import {Gender, Orientation} from "../profile.entity";
 
 export class ProfileInfoDto {
     @Expose()
@@ -19,6 +19,9 @@ export class ProfileInfoDto {
     gender: Gender;
 
     @Expose()
+    orientation: Orientation;
+
+    @Expose()
     age: number;
 
     @Expose()
@@ -31,6 +34,7 @@ export class ProfileInfoDto {
             lastName: user.lastName,
             avatar: user.getAvatar()?.fileName ?? process.env.DEFAULT_AVATAR_FILE_NAME,
             gender: user.profile.gender,
+            orientation: user.profile.orientation,
             age: user.getAge(),
             about: user.profile.about
         });

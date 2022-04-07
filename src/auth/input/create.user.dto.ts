@@ -1,5 +1,5 @@
 import {IsEmail, IsNotEmpty, IsOptional, IsString, Length} from "class-validator";
-import {Gender} from "../../profile/profile.entity";
+import {Gender, Orientation} from "../../profile/profile.entity";
 
 export class CreateUserDto {
     @IsString()
@@ -34,6 +34,10 @@ export class CreateUserDto {
     @IsString()
     @IsOptional()
     gender: Gender;
+
+    @IsString()
+    @IsOptional()
+    orientation: Orientation;
 
     @IsString()
     @IsOptional()

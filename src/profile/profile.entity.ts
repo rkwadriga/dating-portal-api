@@ -8,6 +8,13 @@ export enum Gender {
     Other = 'Other'
 }
 
+export enum Orientation {
+    Hetero = 'Hetero',
+    Bisexual = 'Bisexual',
+    Gay = 'Gay',
+    Pervert = 'Pervert'
+}
+
 @Entity()
 export class Profile {
     @PrimaryColumn()
@@ -19,6 +26,10 @@ export class Profile {
 
     @Column({type: 'date'})
     birthday: Date;
+
+    @Column({nullable: false, default: Orientation.Hetero})
+    @Length(3, 8)
+    orientation: Orientation;
 
     @Column({nullable: true, type: "text"})
     @Length(2, 5000)
