@@ -231,6 +231,10 @@ export class ProfileService {
             changed = true;
             user.profile.gender = input.gender;
         }
+        if (user.profile.orientation !== input.orientation) {
+            changed = true;
+            user.profile.orientation = input.orientation;
+        }
         if (user.profile.birthday !== input.birthday) {
             changed = true;
             user.profile.birthday = input.birthday;
