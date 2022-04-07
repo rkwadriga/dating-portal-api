@@ -3,7 +3,7 @@ import {
     Controller,
     Delete,
     Get,
-    Put,
+    Post,
     NotFoundException, Param, ParseUUIDPipe,
     SerializeOptions,
     UseGuards,
@@ -66,7 +66,7 @@ export class ProfilesController {
         return new ProfileInfoDto(profile);
     }
 
-    @Put('/:id/like')
+    @Post('/:id/like')
     @UseGuards(AuthGuardJwt)
     async like(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
         try {
