@@ -81,7 +81,7 @@ export class User {
             this.photos = [];
         }
 
-        photo.user = this;
+        photo.userId = this.id;
         this.photos.push(photo);
 
         if (photo.isAvatar) {
