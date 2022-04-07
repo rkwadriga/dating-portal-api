@@ -1,6 +1,7 @@
 import {
     ClassSerializerInterceptor,
     Controller,
+    Query,
     Delete,
     Get,
     Post,
@@ -26,8 +27,11 @@ export class ProfilesController {
 
     @Get('/next')
     @UseGuards(AuthGuardJwt)
-    async getNext(@CurrentUser() user: User) {
-        const nextProfile = await this.profilesService.getDatingProfileForUser(user, true);
+    async getNext(@CurrentUser() user: User, @Query('id') id?: string) {
+        if (id === '') {
+            id = undefined;
+        }
+        const nextProfile = await this.profilesService.getDatingProfileForUser(user, true, id);
         if (nextProfile === null) {
             throw new NotFoundException('There are no move accounts left');
         }
