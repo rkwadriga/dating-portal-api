@@ -25,13 +25,24 @@ export class ProfilesController {
 
     @Get('/next')
     @UseGuards(AuthGuardJwt)
-    async list(@CurrentUser() user: User) {
-        const nextProfile = await this.profilesService.getNextProfileForUser(user);
+    async getNext(@CurrentUser() user: User) {
+        const nextProfile = await this.profilesService.getDatingProfileForUser(user, true);
         if (nextProfile === null) {
             throw new NotFoundException('There are no move accounts left');
         }
 
         return new ProfileInfoDto(nextProfile);
+    }
+
+    @Get('/current')
+    @UseGuards(AuthGuardJwt)
+    async getCurrent(@CurrentUser() user: User) {
+        const currentProfile = await this.profilesService.getDatingProfileForUser(user);
+        if (currentProfile === null) {
+            throw new NotFoundException('There are no move accounts left');
+        }
+
+        return new ProfileInfoDto(currentProfile);
     }
 
     @Delete()

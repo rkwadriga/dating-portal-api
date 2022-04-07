@@ -28,7 +28,7 @@ export class ProfilesService {
             .getOne();
     }
 
-    public async getNextProfileForUser(user: User): Promise<User | null>
+    public async getDatingProfileForUser(user: User, next = false): Promise<User | null>
     {
         if (user.settings === undefined) {
             user.settings = await this.settingsRepository.findOne({user});
@@ -48,9 +48,9 @@ export class ProfilesService {
             .where(condition, parameters)
             .getOne();
 
-        /*if (nextProfile !== undefined) {
+        if (next && nextProfile !== undefined) {
             await this.datingRepository.save({fromUser: user, toUser: nextProfile});
-        }*/
+        }
 
         return nextProfile ?? null;
     }
