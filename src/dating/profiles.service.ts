@@ -28,7 +28,7 @@ export class ProfilesService {
             .getOne();
     }
 
-    public async getDatingProfileForUser(user: User, next = false, skipUserUuid?: string): Promise<User | null>
+    public async getDatingProfileForUser(user: User, next = false): Promise<User | null>
     {
         if (user.settings === undefined) {
             user.settings = await this.settingsRepository.findOne({user});
@@ -39,10 +39,6 @@ export class ProfilesService {
             condition += ' AND profile.gender = :showing_gender';
             parameters['showing_gender'] = user.settings.showGender;
         }
-        if (skipUserUuid !== undefined) {
-            condition += ' AND user.uuid != :skip_uuid';
-            parameters['skip_uuid'] = skipUserUuid;
-        }
 
         const nextProfile = await this.userRepository
             .createQueryBuilder('user')
@@ -52,19 +48,8 @@ export class ProfilesService {
             .where(condition, parameters)
             .getOne();
 
-        if (next) {
-            if (nextProfile !== undefined) {
-                await this.datingRepository.save({fromUser: user, toUser: nextProfile});
-            }
-            if (skipUserUuid !== undefined) {
-                const skippedUser = await this.userRepository.findOne({uuid: skipUserUuid});
-                if (skippedUser !== undefined) {
-                    const contact = await this.datingRepository.findOne({fromUser: user, toUser: skippedUser});
-                    if (contact === undefined) {
-                        await this.datingRepository.save({fromUser: user, toUser: skippedUser});
-                    }
-                }
-            }
+        if (next && nextProfile !== undefined) {
+            await this.datingRepository.save({fromUser: user, toUser: nextProfile});
         }
 
         return nextProfile ?? null;
