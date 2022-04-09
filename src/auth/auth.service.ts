@@ -136,6 +136,11 @@ export class AuthService {
         return await this.userRepository.findOne(accessToken.sub);
     }
 
+    public async getUserByUsername(username: string): Promise<User|null> {
+        const user = await this.userRepository.findOne({email: username});
+        return user ?? null;
+    }
+
     private static parseTokenSignature(signature: string, tokenType: TokenType): string {
         const re = new RegExp(`${tokenType}:(.+)`);
         const matches = signature.match(re);

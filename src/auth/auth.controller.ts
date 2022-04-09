@@ -1,12 +1,14 @@
 import {
     ClassSerializerInterceptor,
     Controller,
+    Get,
     Body,
     Post,
     Put,
     SerializeOptions,
     UseGuards,
-    UseInterceptors
+    UseInterceptors,
+    Param
 } from "@nestjs/common";
 import {CreateUserDto} from "./input/create.user.dto";
 import {AuthService} from "./auth.service";
@@ -53,5 +55,12 @@ export class AuthController {
             user,
             this.authService.getTokenForUser(user)
         );
+    }
+
+    @Get('/check-username/:username')
+    async checkUsername(@Param('username') username: string) {
+        return {
+            result: await this.authService.getUserByUsername(username) === null
+        };
     }
 }
