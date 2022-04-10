@@ -3,15 +3,33 @@ import {Repository} from "typeorm";
 import {ContactType, Contact} from "./contact.entity";
 import {InjectRepository} from "@nestjs/typeorm";
 import {User} from "../auth/user.entity";
+import {Photo} from "../profile/photo.entity";
 
 @Injectable()
 export class DatingService {
     constructor(
+        @InjectRepository(User)
+        private readonly userRepository: Repository<User>,
+        @InjectRepository(Photo)
+        private readonly photoRepository: Repository<Photo>,
         @InjectRepository(Contact)
         private readonly contactRepository: Repository<Contact>,
-        @InjectRepository(User)
-        private readonly userRepository: Repository<User>
     ) { }
+
+    public async getPairs(forUser: User): Promise<User[]> {
+        return await this.userRepository
+            .createQueryBuilder('user')
+            .leftJoinAndSelect('user.profile', 'profile')
+            .leftJoinAndSelect('user.photos', 'photos', 'photos.isAvatar = true')
+            .innerJoin('user.contactTo', 'to', 'to.fromUser = :current_user_id AND to.type = :type_like')
+            .innerJoin('user.contactFrom', 'from', 'from.toUser = :current_user_id AND from.type = :type_like')
+            .setParameters({
+                'current_user_id': forUser.id,
+                'type_like': ContactType.LIKE
+            })
+            .where('user.id != :current_user_id')
+            .getMany();
+    }
 
     public async like(fromUser: User, toUserUuid: string) {
         if (fromUser.uuid === toUserUuid) {

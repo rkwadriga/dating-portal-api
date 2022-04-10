@@ -1,7 +1,6 @@
 import {
     ClassSerializerInterceptor,
     Controller,
-    Query,
     Delete,
     Get,
     Post,

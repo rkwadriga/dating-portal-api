@@ -10,13 +10,14 @@ import {Profile} from "../profile/profile.entity";
 import {Settings} from "../profile/settings.entity";
 import {Contact} from "./contact.entity";
 import {DatingService} from "./dating.service";
+import {PairsController} from "./pairs.controller";
 
 @Module({
     imports: [
         TypeOrmModule.forFeature([User, Photo, Profile, Settings, Contact])
     ],
     providers: [LocalStrategy, JwtStrategy, ProfilesService, DatingService],
-    controllers: [ProfilesController]
+    controllers: [ProfilesController, PairsController]
 })
 export class DatingModule {
 
