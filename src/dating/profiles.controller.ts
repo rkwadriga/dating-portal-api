@@ -46,13 +46,13 @@ export class ProfilesController {
     @Get('/:id')
     @UseGuards(AuthGuardJwt)
     @UseInterceptors(ClassSerializerInterceptor)
-    async findOne(@Param('id', ParseUUIDPipe) id: string) {
-        const profile = await this.profilesService.getProfileInfoByUuid(id);
+    async findOne(@CurrentUser() user: User, @Param('id', ParseUUIDPipe) id: string) {
+        const profile = await this.profilesService.getProfileInfoByUuid(id, user);
         if (!profile) {
             throw new NotFoundException(`Profile not found`);
         }
 
-        return new ProfileInfoDto(profile);
+        return  new ProfileInfoDto(profile);
     }
 
     @Post('/:id/like')

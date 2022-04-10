@@ -55,6 +55,8 @@ export class User {
     @OneToMany(() => Contact, contactTo => contactTo.toUser)
     contactTo: Contact[];
 
+    public isPair = false;
+
     public setAvatar(photo: Photo) {
         if (photo !== undefined) {
             this.avatarPhoto = photo;

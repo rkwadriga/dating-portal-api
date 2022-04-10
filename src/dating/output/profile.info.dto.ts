@@ -6,6 +6,9 @@ export class ProfileInfoDto extends BaseDto {
     @Expose()
     photos: string[] = [];
 
+    @Expose()
+    isPair = false;
+
     constructor(user: User) {
         super(user);
 
@@ -21,5 +24,7 @@ export class ProfileInfoDto extends BaseDto {
                 this.photos.push(photo.fileName);
             }
         }
+
+        this.isPair = user.isPair;
     }
 }
