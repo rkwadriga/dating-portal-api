@@ -7,18 +7,18 @@ export enum ContactType {
 }
 
 @Entity()
-export class Dating {
+export class Contact {
     @PrimaryColumn()
     fromUserId: number;
 
     @PrimaryColumn()
     toUserId: number;
 
-    @ManyToOne(() => User, fromUser => fromUser.datingFrom, {nullable: false})
+    @ManyToOne(() => User, fromUser => fromUser.contactFrom, {nullable: false})
     @JoinColumn()
     fromUser: User;
 
-    @ManyToOne(() => User, toUser => toUser.datingTo, {nullable: false})
+    @ManyToOne(() => User, toUser => toUser.contactTo, {nullable: false})
     @JoinColumn()
     toUser: User;
 

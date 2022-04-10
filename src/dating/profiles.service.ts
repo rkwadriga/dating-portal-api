@@ -4,7 +4,7 @@ import {User} from "../auth/user.entity";
 import {Repository} from "typeorm";
 import {Photo} from "../profile/photo.entity";
 import {Settings} from "../profile/settings.entity";
-import {Dating} from "./dating.entity";
+import {Contact} from "./contact.entity";
 
 @Injectable()
 export class ProfilesService {
@@ -15,8 +15,8 @@ export class ProfilesService {
         private readonly photoRepository: Repository<Photo>,
         @InjectRepository(Settings)
         private readonly settingsRepository: Repository<Settings>,
-        @InjectRepository(Dating)
-        private readonly datingRepository: Repository<Dating>
+        @InjectRepository(Contact)
+        private readonly contactRepository: Repository<Contact>
     ) {}
 
     public async getProfileInfoByUuid(uuid: string): Promise<User | null> {
@@ -33,7 +33,7 @@ export class ProfilesService {
         if (user.settings === undefined) {
             user.settings = await this.settingsRepository.findOne({user});
         }
-        let condition = 'user.id != :current_user_id AND datingTo.fromUser IS NULL';
+        let condition = 'user.id != :current_user_id AND contactTo.fromUser IS NULL';
         let parameters = {'current_user_id': user.id};
         if (user.settings.showGender !== null) {
             condition += ' AND profile.gender = :showing_gender';
@@ -44,12 +44,12 @@ export class ProfilesService {
             .createQueryBuilder('user')
             .leftJoinAndSelect('user.profile', 'profile')
             .leftJoinAndSelect('user.photos', 'photos')
-            .leftJoin('user.datingTo', 'datingTo', 'datingTo.fromUser = :current_user_id')
+            .leftJoin('user.contactTo', 'contactTo', 'contactTo.fromUser = :current_user_id')
             .where(condition, parameters)
             .getOne();
 
         if (next && nextProfile !== undefined) {
-            await this.datingRepository.save({fromUser: user, toUser: nextProfile});
+            await this.contactRepository.save({fromUser: user, toUser: nextProfile});
         }
 
         return nextProfile ?? null;

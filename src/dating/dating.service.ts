@@ -1,14 +1,14 @@
 import {Injectable} from "@nestjs/common";
 import {Repository} from "typeorm";
-import {ContactType, Dating} from "./dating.entity";
+import {ContactType, Contact} from "./contact.entity";
 import {InjectRepository} from "@nestjs/typeorm";
 import {User} from "../auth/user.entity";
 
 @Injectable()
 export class DatingService {
     constructor(
-        @InjectRepository(Dating)
-        private readonly datingRepository: Repository<Dating>,
+        @InjectRepository(Contact)
+        private readonly contactRepository: Repository<Contact>,
         @InjectRepository(User)
         private readonly userRepository: Repository<User>
     ) { }
@@ -23,17 +23,17 @@ export class DatingService {
             throw new Error(`User ${toUserUuid} not found`);
         }
 
-        let contact = await this.datingRepository.findOne({fromUser, toUser});
+        let contact = await this.contactRepository.findOne({fromUser, toUser});
         if (contact === undefined) {
-            await this.datingRepository.save({fromUser, toUser, type: ContactType.LIKE});
+            await this.contactRepository.save({fromUser, toUser, type: ContactType.LIKE});
             return;
         }
 
-        await this.datingRepository.save(Object.assign(contact, {type: ContactType.LIKE}));
+        await this.contactRepository.save(Object.assign(contact, {type: ContactType.LIKE}));
     }
 
-    public async clearDatingsForUser(user: User) {
-        await this.datingRepository
+    public async clearContactsForUser(user: User) {
+        await this.contactRepository
             .createQueryBuilder()
             .delete()
             .where(

@@ -3,7 +3,7 @@ import {User} from "../auth/user.entity";
 import {Photo} from "../profile/photo.entity";
 import {Profile} from "../profile/profile.entity";
 import {Settings} from "../profile/settings.entity";
-import {Dating} from "../dating/dating.entity";
+import {Contact} from "../dating/contact.entity";
 
 export default (): TypeOrmModuleOptions => ({
     type: 'mysql',
@@ -18,7 +18,7 @@ export default (): TypeOrmModuleOptions => ({
         Photo,
         Profile,
         Settings,
-        Dating
+        Contact
     ],
     synchronize: true,
     dropSchema: Boolean(parseInt(process.env.DB_DROP_SCHEMA))

@@ -8,12 +8,12 @@ import {ProfilesService} from "./profiles.service";
 import {ProfilesController} from "./profiles.controller";
 import {Profile} from "../profile/profile.entity";
 import {Settings} from "../profile/settings.entity";
-import {Dating} from "./dating.entity";
+import {Contact} from "./contact.entity";
 import {DatingService} from "./dating.service";
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([User, Photo, Profile, Settings, Dating])
+        TypeOrmModule.forFeature([User, Photo, Profile, Settings, Contact])
     ],
     providers: [LocalStrategy, JwtStrategy, ProfilesService, DatingService],
     controllers: [ProfilesController]

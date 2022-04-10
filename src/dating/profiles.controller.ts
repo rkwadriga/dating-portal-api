@@ -38,8 +38,8 @@ export class ProfilesController {
 
     @Delete()
     @UseGuards(AuthGuardJwt)
-    async clearDatings(@CurrentUser() user: User) {
-        await this.datingService.clearDatingsForUser(user);
+    async clearContacts(@CurrentUser() user: User) {
+        await this.datingService.clearContactsForUser(user);
 
         return {};
     }
