@@ -36,7 +36,6 @@ export class ProfilesService {
             .getOne();
 
         profile.isPair = pairContact !== undefined;
-        profile.photos = [];
 
         return profile;
     }
