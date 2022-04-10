@@ -58,8 +58,9 @@ export class ProfilesController {
     @Post('/:id/like')
     @UseGuards(AuthGuardJwt)
     async like(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
+        let isPair = false;
         try {
-            await this.datingService.like(user, id);
+            isPair = await this.datingService.like(user, id);
         } catch (e) {
             if (e.message.includes('not found')) {
                 throw new NotFoundException(`User ${id} not found`);
@@ -68,6 +69,6 @@ export class ProfilesController {
             }
         }
 
-        return {};
+        return {isPair};
     }
 }

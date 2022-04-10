@@ -19,7 +19,8 @@ export class ProfilesService {
         private readonly contactRepository: Repository<Contact>
     ) {}
 
-    public async getProfileInfoByUuid(uuid: string, forUser: User | null = null): Promise<User | null> {
+    public async getProfileInfoByUuid(uuid: string, forUser: User): Promise<User | null> {
+        // Get target profile
         const profile = await this.userRepository
             .createQueryBuilder('user')
             .leftJoinAndSelect('user.profile', 'profile')
@@ -27,21 +28,15 @@ export class ProfilesService {
             .where('uuid = :uuid', {uuid})
             .getOne();
 
-        if (profile !== undefined && forUser !== null) {
-            const pair = await this.userRepository.createQueryBuilder('u')
-                .select('u.id')
-                .innerJoin('u.contactTo', 'to', 'to.fromUser = :current_user_id AND to.type = :type_like')
-                .innerJoin('u.contactFrom', 'from', 'from.toUser = :current_user_id AND from.type = :type_like')
-                .where('u.id = :profile_id')
-                .setParameters({
-                    'profile_id': profile.id,
-                    'current_user_id': forUser.id,
-                    'type_like': ContactType.LIKE
-                })
-                .getOne();
+        // Get like contact from just liked account
+        const pairContact = await this.contactRepository.createQueryBuilder('c')
+            .select('c.type')
+            .innerJoin(Contact, 'cc', 'cc.fromUserId = c.toUserId AND cc.toUserId = c.fromUserId AND cc.type = c.type')
+            .where({fromUser: profile, toUser: forUser, type: ContactType.LIKE})
+            .getOne();
 
-            profile.isPair = pair !== undefined;
-        }
+        profile.isPair = pairContact !== undefined;
+        profile.photos = [];
 
         return profile;
     }

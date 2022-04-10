@@ -38,7 +38,7 @@ export class User {
     @UpdateDateColumn()
     updatedAt: Date;
 
-    @OneToMany(() => Photo, photo => photo.user, {eager: true, cascade: true})
+    @OneToMany(() => Photo, photo => photo.user, {cascade: true})
     photos: Photo[];
 
     @OneToOne(() => Profile, profile => profile.user)

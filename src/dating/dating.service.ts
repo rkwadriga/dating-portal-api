@@ -31,23 +31,31 @@ export class DatingService {
             .getMany();
     }
 
-    public async like(fromUser: User, toUserUuid: string) {
+    public async like(fromUser: User, toUserUuid: string): Promise<boolean> {
         if (fromUser.uuid === toUserUuid) {
             throw new Error('You can not luke yourself');
         }
 
         const toUser = await this.userRepository.findOne({uuid: toUserUuid});
-        if (toUser === null) {
+        if (toUser === undefined) {
             throw new Error(`User ${toUserUuid} not found`);
         }
 
+        // Create or update contact
         let contact = await this.contactRepository.findOne({fromUser, toUser});
         if (contact === undefined) {
             await this.contactRepository.save({fromUser, toUser, type: ContactType.LIKE});
-            return;
+        } else if (contact.type !== ContactType.LIKE) {
+            await this.contactRepository.save(Object.assign(contact, {type: ContactType.LIKE}));
         }
 
-        await this.contactRepository.save(Object.assign(contact, {type: ContactType.LIKE}));
+        // Get like contact from just liked account
+        let pairContact = await this.contactRepository.createQueryBuilder('c')
+            .select('c.type')
+            .where({fromUser: toUser, toUser: fromUser, type: ContactType.LIKE})
+            .getOne();
+
+        return pairContact !== undefined;
     }
 
     public async clearContactsForUser(user: User) {
