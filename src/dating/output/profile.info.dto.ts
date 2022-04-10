@@ -8,6 +8,7 @@ export class ProfileInfoDto extends BaseDto {
 
     constructor(user: User) {
         super(user);
+
         if (user.photos === undefined) {
             return;
         }
@@ -20,7 +21,5 @@ export class ProfileInfoDto extends BaseDto {
                 this.photos.push(photo.fileName);
             }
         }
-
-        this.avatar = undefined;
     }
 }
