@@ -22,6 +22,6 @@ export class Contact {
     @JoinColumn()
     toUser: User;
 
-    @Column({nullable: true})
+    @Column({type: 'tinyint', nullable: true})
     type: ContactType;
 }
