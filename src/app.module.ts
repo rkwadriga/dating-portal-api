@@ -8,6 +8,8 @@ import {AuthModule} from "./auth/auth.module";
 import {ProfileModule} from "./profile/profile.module";
 import {DatingModule} from "./dating/dating.module";
 import {PublicModule} from "./public/public.module";
+import {ChatGateway} from "./chat/chat.gateway";
+import {LoggerService} from "./service/logger.service";
 
 @Module({
     imports: [
@@ -24,7 +26,7 @@ import {PublicModule} from "./public/public.module";
         PublicModule
     ],
     controllers: [AppController],
-    providers: [AppService],
+    providers: [AppService, ChatGateway, LoggerService],
 })
 export class AppModule {
 }
