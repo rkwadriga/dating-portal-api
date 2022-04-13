@@ -3,6 +3,9 @@ import {Message} from "../message.entity";
 
 export class MessageInfoDto {
     @Expose()
+    id: string;
+
+    @Expose()
     from: string;
 
     @Expose()
@@ -15,6 +18,7 @@ export class MessageInfoDto {
     text: string;
 
     constructor(message: Message) {
+        this.id = message.uuid;
         this.from = message.fromUser.uuid;
         this.to = message.toUser.uuid;
         this.time = message.time;
