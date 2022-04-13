@@ -15,6 +15,7 @@ import {removeByIndex} from "../helpers/array.helper";
 import {DialogService} from "../dialog/dialog.service";
 
 export interface WsMessage {
+    id: string,
     client: string,
     msg: string,
     time?: Date
@@ -90,18 +91,20 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         message.client = clientID;
         this.logger.info('chat', `Message from ${clientID} to ${recipientID}: ${message.msg}`);
 
+        // Write message to database
+        try {
+            const DbMessage = await this.dialogService.writeMessage(recipientID, message);
+            message.id = DbMessage.uuid;
+        } catch (e) {
+            this.logger.error('chat', `Can not write a new message to user ${recipientID}: ${e.message}`, message);
+            return;
+        }
+
         // If recipient is connected - send massage just now. Else remember it to send it when he will return
         if (this.clients[recipientID] !== undefined) {
             this.clients[recipientID].emit('message', message);
         } else if(this.messages[recipientID] !== undefined) {
             this.messages[recipientID].push(message);
-        }
-
-        // Write message to database
-        try {
-            await this.dialogService.writeMessage(recipientID, message);
-        } catch (e) {
-            this.logger.error('chat', `Can not write a new message to user ${recipientID}: ${e.message}`, message);
         }
     }
 }
