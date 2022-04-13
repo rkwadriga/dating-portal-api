@@ -15,28 +15,31 @@ export class DialogService {
         private readonly userRepository: Repository<User>
     ) { }
 
-    public async writeMessage(recipientID: string, message: WsMessage): Promise<Message> {
+    public async writeMessage(message: WsMessage): Promise<Message> {
         // Check the message params
-        if (!message.msg) {
+        if (!message.text) {
             throw new Error('Param "msg" cna not be empty');
         }
-        if (!message.client) {
-            throw new Error('Param "client" cna not be empty');
+        if (!message.from) {
+            throw new Error('Param "from" cna not be empty');
+        }
+        if (!message.to) {
+            throw new Error('Param "to" cna not be empty');
         }
 
         // Find the sender and the recipient users
-        const sender = await this.userRepository.findOne({uuid: message.client});
+        const sender = await this.userRepository.findOne({uuid: message.from});
         if (sender === undefined) {
-            throw new Error(`Can not find the sender by uuid "${message.client}"`);
+            throw new Error(`Can not find the sender by uuid "${message.from}"`);
         }
-        const recipient = await this.userRepository.findOne({uuid: recipientID});
+        const recipient = await this.userRepository.findOne({uuid: message.to});
         if (recipient === undefined) {
-            throw new Error(`Can not find the recipient by uuid "${recipientID}"`);
+            throw new Error(`Can not find the recipient by uuid "${message.to}"`);
         }
 
         return await this.messageRepository.save({
             uuid: uuidv4(),
-            text: message.msg,
+            text: message.text,
             time: message.time ?? new Date(),
             fromUser: sender,
             toUser: recipient

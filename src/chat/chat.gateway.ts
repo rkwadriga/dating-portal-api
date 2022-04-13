@@ -15,9 +15,10 @@ import {removeByIndex} from "../helpers/array.helper";
 import {DialogService} from "../dialog/dialog.service";
 
 export interface WsMessage {
-    id: string,
-    client: string,
-    msg: string,
+    id: string;
+    from: string;
+    to: string;
+    text: string;
     time?: Date
 }
 
@@ -73,38 +74,33 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
             this.logger.error('chat', `Trying to send a message without client ID: "${client?.['handshake']?.['url']}"`);
             return;
         }
-
-        await this.sendMessageFrom(clientID, message);
-    }
-
-    private async sendMessageFrom(clientID: string, message: WsMessage) {
         // Check the sender and recipient IDs
-        if (clientID === message.client) {
+        if (clientID === message.to) {
             this.logger.error('chat', `Client ${clientID} tries to send the message to himself`);
             return;
         }
 
-        // Remember recipient ID
-        const recipientID = message.client;
+        await this.sendMessage(message);
+    }
 
-        // Change messages "client" to sender's ID
-        message.client = clientID;
-        this.logger.info('chat', `Message from ${clientID} to ${recipientID}: ${message.msg}`);
+    private async sendMessage(message: WsMessage) {
+
+        this.logger.info('chat', `Message from ${message.from} to ${message.to}: ${message.text}`);
 
         // Write message to database
         try {
-            const DbMessage = await this.dialogService.writeMessage(recipientID, message);
+            const DbMessage = await this.dialogService.writeMessage(message);
             message.id = DbMessage.uuid;
         } catch (e) {
-            this.logger.error('chat', `Can not write a new message to user ${recipientID}: ${e.message}`, message);
+            this.logger.error('chat', `Can not write a new message to user ${message.to}: ${e.message}`, message);
             return;
         }
 
         // If recipient is connected - send massage just now. Else remember it to send it when he will return
-        if (this.clients[recipientID] !== undefined) {
-            this.clients[recipientID].emit('message', message);
-        } else if(this.messages[recipientID] !== undefined) {
-            this.messages[recipientID].push(message);
+        if (this.clients[message.to] !== undefined) {
+            this.clients[message.to].emit('message', message);
+        } else if(this.messages[message.to] !== undefined) {
+            this.messages[message.to].push(message);
         }
     }
 }
