@@ -10,6 +10,10 @@ import {DatingModule} from "./dating/dating.module";
 import {PublicModule} from "./public/public.module";
 import {ChatGateway} from "./chat/chat.gateway";
 import {LoggerService} from "./service/logger.service";
+import {DialogModule} from "./dialog/dialog.module";
+import {DialogService} from "./dialog/dialog.service";
+import {Message} from "./dialog/message.entity";
+import {User} from "./auth/user.entity";
 
 @Module({
     imports: [
@@ -20,13 +24,15 @@ import {LoggerService} from "./service/logger.service";
             envFilePath: `.env.${process.env.NODE_ENV}` // This variable is set in package.json file (scripts.start:dev section for example)
         }),
         TypeOrmModule.forRootAsync({useFactory: ormConfig}),
+        TypeOrmModule.forFeature([User, Message]),
         AuthModule,
         ProfileModule,
         DatingModule,
-        PublicModule
+        PublicModule,
+        DialogModule
     ],
     controllers: [AppController],
-    providers: [AppService, ChatGateway, LoggerService],
+    providers: [AppService, ChatGateway, LoggerService, DialogService],
 })
 export class AppModule {
 }

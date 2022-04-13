@@ -14,7 +14,6 @@ import {Settings} from "./settings.entity";
 import {bytesToReadable} from "../helpers/string.helper";
 import {inArray, removeByIndex} from "../helpers/array.helper";
 import {base64ToFile} from "../helpers/file.helper";
-import {throwError} from "rxjs";
 import {UpdatePasswordDto} from "./input/update.password.dto";
 import * as bcrypt from "bcrypt";
 
