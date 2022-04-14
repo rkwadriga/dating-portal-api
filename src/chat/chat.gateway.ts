@@ -1,17 +1,7 @@
-import {
-    WebSocketGateway,
-    SubscribeMessage,
-    ConnectedSocket,
-    MessageBody,
-    WebSocketServer,
-    OnGatewayInit,
-    OnGatewayConnection,
-    OnGatewayDisconnect
-} from "@nestjs/websockets";
-import { Server } from "http";
-import { Socket as Client } from "net";
-import { LoggerService } from "../service/logger.service";
-import {removeByIndex} from "../helpers/array.helper";
+import {Injectable} from "@nestjs/common";
+import {ConnectionData, SocketService} from "../service/socket.service";
+import {IncomingMessage as WsRequest} from "http";
+import {LoggerService} from "../service/logger.service";
 import {DialogService} from "../dialog/dialog.service";
 
 export interface WsMessage {
@@ -22,85 +12,80 @@ export interface WsMessage {
     time?: Date
 }
 
-@WebSocketGateway(3001, {cors: true})
-export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
-    @WebSocketServer()
-    server: Server;
-
-    clients: {[key: string]: Client} = {};
-    messages: {[key: string]: WsMessage[]} = {};
+@Injectable()
+export class ChatGateway {
+    private connections: {[key: string]: WebSocket} = {};
 
     constructor(
-        private readonly logger: LoggerService,
-        private readonly dialogService: DialogService
-    ) { }
-
-    afterInit(server: any): any {
-        //console.log('Server started');
+        private readonly socketService: SocketService,
+        private readonly dialogService: DialogService,
+        private readonly logger: LoggerService
+    ) {
+        this.init();
     }
 
-    handleConnection(client: Client): void {
-        const clientID = client?.['handshake']?.['query']?.['client'];
-        if (!clientID) {
-            this.logger.error('chat', `Trying to connected without client ID: "${client?.['handshake']?.['url']}"`);
+    private init() {
+        this.socketService.onConnect().subscribe(connection => this.onConnected(connection));
+        this.socketService.onClose().subscribe(connection => this.onClose(connection));
+        this.socketService.onMessage = (event: MessageEvent) => {
+            this.onMessage(JSON.parse(event.data));
+        };
+    }
+
+    private onConnected(data: ConnectionData): void {
+        const clientID = ChatGateway.getClientID(data.request);
+        if (clientID === null) {
+            this.logError('Invalid connection request: client ID missed');
             return;
         }
-        if (this.clients[clientID] === undefined) {
-            this.clients[clientID] = client;
-            this.logger.info('chat', `Client ${clientID} connected`);
-        }
-
-        if (this.messages[clientID] === undefined) {
-            this.messages[clientID] = [];
-        }
-        this.messages[clientID].forEach((message, i) => {
-            client.emit('message', message);
-            removeByIndex(i, this.messages[clientID]);
-        });
+        this.connections[clientID] = data.connection;
+        this.logInfo(`Client #${clientID} connected`);
     }
 
-    handleDisconnect(client: Client): void {
-        const clientID = client?.['handshake']?.['query']?.['client'];
-        if (clientID && this.clients[clientID] !== undefined) {
-            this.clients[clientID] = undefined;
-            this.logger.info('chat', `Client ${clientID} disconnected`);
-        }
-    }
-
-    @SubscribeMessage('message')
-    async handleMessage(@MessageBody() message: WsMessage, @ConnectedSocket() client: Client) {
-        const clientID = client?.['handshake']?.['query']?.['client'];
-        if (!clientID) {
-            this.logger.error('chat', `Trying to send a message without client ID: "${client?.['handshake']?.['url']}"`);
+    private onClose(data: ConnectionData): void {
+        const clientID = ChatGateway.getClientID(data.request);
+        if (clientID === null || this.connections[clientID] === undefined) {
             return;
         }
-        // Check the sender and recipient IDs
-        if (clientID === message.to) {
-            this.logger.error('chat', `Client ${clientID} tries to send the message to himself`);
-            return;
-        }
-
-        await this.sendMessage(message);
+        this.connections[clientID] = undefined;
+        this.logInfo(`Client #${clientID} disconnected`);
     }
 
-    private async sendMessage(message: WsMessage) {
+    private async onMessage(message: WsMessage) {
+        // Check message
+        if (!message.from || !message.to || !message.text) {
+            this.logError(`Invalid message: "${JSON.stringify(message)}"`);
+            return;
+        }
+        if (message.time === undefined) {
+            message.time = new Date();
+        }
+        this.logInfo(`Message from ${message.from} tp ${message.to}: "${message.text}"`);
 
-        this.logger.info('chat', `Message from ${message.from} to ${message.to}: ${message.text}`);
-
-        // Write message to database
+        // Write message to DB
         try {
-            const DbMessage = await this.dialogService.writeMessage(message);
-            message.id = DbMessage.uuid;
+            const dbMessage = await this.dialogService.writeMessage(message);
+            message.id = dbMessage.uuid;
         } catch (e) {
-            this.logger.error('chat', `Can not write a new message to user ${message.to}: ${e.message}`, message);
-            return;
+            this.logError(`Can not write message ${JSON.stringify(message)} to DB: ${e.message}`);
         }
 
-        // If recipient is connected - send massage just now. Else remember it to send it when he will return
-        if (this.clients[message.to] !== undefined) {
-            this.clients[message.to].emit('message', message);
-        } else if(this.messages[message.to] !== undefined) {
-            this.messages[message.to].push(message);
+        // Send message to user if he is connected
+        if (this.connections[message.to] !== undefined) {
+            this.connections[message.to].send(JSON.stringify(message));
         }
+    }
+
+    private static getClientID(request: WsRequest): string | null {
+        const matches = request.url.match(/client=([\w\d-]+)/);
+        return matches[1] ?? null;
+    }
+
+    private logInfo(message: string, context?: any) {
+        this.logger.info('chat', message, context);
+    }
+
+    private logError(message: string, context?: any) {
+        this.logger.error('chat', message, context);
     }
 }

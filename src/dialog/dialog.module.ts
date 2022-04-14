@@ -5,13 +5,12 @@ import {DialogService} from "./dialog.service";
 import {DialogController} from "./dialog.controller";
 import {LoggerService} from "../service/logger.service";
 import {User} from "../auth/user.entity";
-import {ChatGateway} from "../chat/chat.gateway";
 
 @Module({
     imports: [
         TypeOrmModule.forFeature([Message, User])
     ],
-    providers: [ChatGateway, DialogService, LoggerService],
+    providers: [DialogService, LoggerService],
     controllers: [DialogController]
 })
 export class DialogModule {

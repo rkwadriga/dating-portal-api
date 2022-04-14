@@ -8,12 +8,13 @@ import {AuthModule} from "./auth/auth.module";
 import {ProfileModule} from "./profile/profile.module";
 import {DatingModule} from "./dating/dating.module";
 import {PublicModule} from "./public/public.module";
-import {ChatGateway} from "./chat/chat.gateway";
 import {LoggerService} from "./service/logger.service";
 import {DialogModule} from "./dialog/dialog.module";
 import {DialogService} from "./dialog/dialog.service";
 import {Message} from "./dialog/message.entity";
 import {User} from "./auth/user.entity";
+import {SocketService} from "./service/socket.service";
+import {ChatGateway} from "./chat/chat.gateway";
 
 @Module({
     imports: [
@@ -32,7 +33,7 @@ import {User} from "./auth/user.entity";
         DialogModule
     ],
     controllers: [AppController],
-    providers: [AppService, ChatGateway, LoggerService, DialogService],
+    providers: [AppService, LoggerService, DialogService, SocketService, ChatGateway],
 })
 export class AppModule {
 }
