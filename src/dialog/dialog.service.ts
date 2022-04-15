@@ -61,7 +61,7 @@ export class DialogService {
             .addSelect(['fromU.uuid', 'toU.uuid'])
             .leftJoin('m.fromUser', 'fromU')
             .leftJoin('m.toUser', 'toU')
-            .orderBy('m.time')
+            .orderBy('m.time', 'DESC')
             .where('(m.fromUserId = :user_id AND m.toUserId = :partner_id) OR ' +
                 '(m.fromUserId = :partner_id AND m.toUserId = :user_id)',
             {
