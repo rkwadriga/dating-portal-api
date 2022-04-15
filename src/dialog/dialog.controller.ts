@@ -1,6 +1,7 @@
 import {
     Controller,
     SerializeOptions,
+    Req,
     Get,
     UseGuards,
     UseInterceptors,
@@ -11,20 +12,32 @@ import {CurrentUser} from "../auth/current-user.decorator";
 import {User} from "../auth/user.entity";
 import {DialogService} from "./dialog.service";
 import {MessageInfoDto} from "./output/message.info.dto";
+import {Request} from 'express';
+import {BaseController} from "../base.controller";
 
 @Controller('/api/dialog')
 @SerializeOptions({strategy: 'excludeAll'})
-export class DialogController {
+export class DialogController extends BaseController {
     constructor(
         private readonly dialogService: DialogService
-    ) { }
+    ) {
+        super();
+    }
 
     @Get('/:id')
     @UseGuards(AuthGuardJwt)
     @UseInterceptors(ClassSerializerInterceptor)
-    public async getDialog(@CurrentUser() user: User, @Param('id', ParseUUIDPipe) id: string) {
+    public async getDialog(
+        @CurrentUser() user: User,
+        @Param('id', ParseUUIDPipe) id: string,
+        @Req() request: Request
+    ) {
         try {
-            const messages = await this.dialogService.getDialog(user, id);
+            const [limit, offset] = [
+                this.getQueryParam(request, 'limit', 'number'),
+                this.getQueryParam(request, 'offset', 'number') ?? 0
+            ];
+            const messages = await this.dialogService.getDialog(user, id, limit, offset);
             let result = [];
             messages.forEach(message => {
                 result.push(new MessageInfoDto(message));

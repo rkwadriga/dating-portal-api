@@ -8,6 +8,8 @@ import {User} from "../auth/user.entity";
 
 @Injectable()
 export class DialogService {
+    private readonly defaultMessagesLimit = Number(process.env.DEFAULT_CHAT_MESSAGES_LIMIT)
+
     constructor(
         @InjectRepository(Message)
         private readonly messageRepository: Repository<Message>,
@@ -46,13 +48,16 @@ export class DialogService {
         });
     }
 
-    public async getDialog(forUser: User, withUserUuid: string): Promise<Message[]> {
+    public async getDialog(forUser: User, withUserUuid: string, limit: number | null = null, offset = 0): Promise<Message[]> {
+        if (limit === null) {
+            limit = this.defaultMessagesLimit;
+        }
         const partner = await this.userRepository.findOne({uuid: withUserUuid});
         if (partner === undefined) {
             throw new Error(`User #${withUserUuid} not found`);
         }
 
-        return await this.messageRepository.createQueryBuilder('m')
+        let request = this.messageRepository.createQueryBuilder('m')
             .addSelect(['fromU.uuid', 'toU.uuid'])
             .leftJoin('m.fromUser', 'fromU')
             .leftJoin('m.toUser', 'toU')
@@ -63,6 +68,12 @@ export class DialogService {
                     'user_id': forUser.id,
                     'partner_id': partner.id
                 })
-            .getMany();
+            .offset(offset);
+
+        if (limit > 0) {
+            request.limit(limit);
+        }
+
+        return await request.getMany();
     }
 }
