@@ -6,6 +6,11 @@ import {WsMessage} from "../chat/chat.gateway";
 import {v4 as uuidv4} from 'uuid';
 import {User} from "../auth/user.entity";
 
+export interface Dialog {
+    count: number,
+    messages: Message[]
+}
+
 @Injectable()
 export class DialogService {
     private readonly defaultMessagesLimit = Number(process.env.DEFAULT_CHAT_MESSAGES_LIMIT)
@@ -48,7 +53,7 @@ export class DialogService {
         });
     }
 
-    public async getDialog(forUser: User, withUserUuid: string, limit: number | null = null, offset = 0): Promise<Message[]> {
+    public async getDialog(forUser: User, withUserUuid: string, limit: number | null = null, offset = 0): Promise<Dialog> {
         if (limit === null) {
             limit = this.defaultMessagesLimit;
         }
@@ -67,13 +72,23 @@ export class DialogService {
             {
                     'user_id': forUser.id,
                     'partner_id': partner.id
-                })
-            .offset(offset);
+                });
+
+        const count = await request.getCount();
+        if (count === 0) {
+            return {count: 0, messages: []};
+        }
 
         if (limit > 0) {
             request.limit(limit);
         }
+        if (offset > 0) {
+            request.offset(offset);
+        }
 
-        return await request.getMany();
+        return {
+            count,
+            messages: await request.getMany()
+        };
     }
 }

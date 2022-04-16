@@ -14,6 +14,7 @@ import {DialogService} from "./dialog.service";
 import {MessageInfoDto} from "./output/message.info.dto";
 import {Request} from 'express';
 import {BaseController} from "../base.controller";
+import {DialogInfoDto} from "./output/dialog.info.dto";
 
 @Controller('/api/dialog')
 @SerializeOptions({strategy: 'excludeAll'})
@@ -37,12 +38,7 @@ export class DialogController extends BaseController {
                 this.getQueryParam(request, 'limit', 'number'),
                 this.getQueryParam(request, 'offset', 'number') ?? 0
             ];
-            const messages = await this.dialogService.getDialog(user, id, limit, offset);
-            let result = [];
-            messages.forEach(message => {
-                result.push(new MessageInfoDto(message));
-            });
-            return result;
+            return new DialogInfoDto(await this.dialogService.getDialog(user, id, limit, offset));
         } catch (e) {
             if (e.message.toString().indexOf('not found') !== -1) {
                 throw new NotFoundException(e.message);
