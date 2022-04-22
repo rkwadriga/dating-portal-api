@@ -1,17 +1,18 @@
-import {Injectable} from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import * as fs from 'fs';
 import * as MD5 from "crypto-js/md5"
-import {promisify} from 'util';
-import {User} from "../auth/user.entity";
-import {inArray} from "../helpers/array.helper";
-import {getFileExt} from "../helpers/file.helper";
-import {Repository} from 'typeorm';
-import {InjectRepository} from "@nestjs/typeorm";
-import {Gender} from "../profile/profile.entity";
+import { promisify } from 'util';
+import { User } from "../auth/user.entity";
+import { inArray } from "../helpers/array.helper";
+import { getFileExt } from "../helpers/file.helper";
+import { Repository } from 'typeorm';
+import { InjectRepository } from "@nestjs/typeorm";
+import { Gender } from "../profile/profile.entity";
+import { imagesConfig } from "../config/images.config";
 
 @Injectable()
 export class FileSystemService {
-    private allowedPhotosExtensions = ['jpg', 'jpeg', 'png'];
+    private allowedPhotosExtensions = imagesConfig.allowedExtensions;
     private md5Buffer = 1024;
 
     constructor(

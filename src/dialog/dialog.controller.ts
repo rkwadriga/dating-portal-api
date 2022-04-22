@@ -7,14 +7,13 @@ import {
     UseInterceptors,
     ClassSerializerInterceptor, Param, ParseUUIDPipe, NotFoundException, BadRequestException
 } from "@nestjs/common";
-import {AuthGuardJwt} from "../auth/guards/auth-guard.jwt";
-import {CurrentUser} from "../auth/current-user.decorator";
-import {User} from "../auth/user.entity";
-import {DialogService} from "./dialog.service";
-import {MessageInfoDto} from "./output/message.info.dto";
-import {Request} from 'express';
-import {BaseController} from "../base.controller";
-import {DialogInfoDto} from "./output/dialog.info.dto";
+import { AuthGuardJwt } from "../auth/guards/auth-guard.jwt";
+import { CurrentUser } from "../auth/current-user.decorator";
+import { User } from "../auth/user.entity";
+import { DialogService } from "./dialog.service";
+import { Request } from 'express';
+import { BaseController } from "../base.controller";
+import { DialogInfoDto } from "./output/dialog.info.dto";
 
 @Controller('/api/dialog')
 @SerializeOptions({strategy: 'excludeAll'})
