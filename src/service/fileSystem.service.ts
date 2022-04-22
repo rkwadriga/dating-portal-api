@@ -9,6 +9,8 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from "@nestjs/typeorm";
 import { Gender } from "../profile/profile.entity";
 import { imagesConfig } from "../config/images.config";
+import { FileSystemException, FileSystemExceptionCodes } from "../exceptions/fileSystem.exception";
+import { ImageException, ImageExceptionCodes } from "../exceptions/image.exception";
 
 @Injectable()
 export class FileSystemService {
@@ -36,7 +38,7 @@ export class FileSystemService {
 
         // If this file already exist - throw an error
         if (this.fileExist(filePath)) {
-            throw new Error(`File ${filePath} already exist`);
+            throw new FileSystemException(`File ${filePath} already exist`, FileSystemExceptionCodes.FILE_ALREADY_EXIST);
         }
 
         // Create image dir
@@ -92,10 +94,10 @@ export class FileSystemService {
         // Get photo extension and check is it allowed
         const ext = getFileExt(file.originalname);
         if (ext === null) {
-            throw new Error(`Invalid file name: "${file.originalname}"`);
+            throw new FileSystemException(`Invalid file name: "${file.originalname}"`, FileSystemExceptionCodes.INVALID_PATH);
         }
         if (!inArray(ext, this.allowedPhotosExtensions)) {
-            throw new Error(`Files with extension "${ext}" are not allowed`);
+            throw new ImageException(`Files with extension "${ext}" are not allowed`, ImageExceptionCodes.INVALID_EXTENSION);
         }
 
         return this.getFileMd5(file) + '.' + ext;

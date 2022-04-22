@@ -1,16 +1,19 @@
 import {
+    BadRequestException,
     Controller,
     Get,
     InternalServerErrorException,
     NotFoundException,
-    Param,
-    Req,
-    StreamableFile
+    Param, StreamableFile
 } from "@nestjs/common";
 import { FileSystemService } from "../service/fileSystem.service";
+import { ImageService } from "../service/image.service";
+import { BaseException } from "../exceptions/base.exception";
+import { FileSystemExceptionCodes } from "../exceptions/fileSystem.exception";
+import { inArray } from "../helpers/array.helper";
+import { ImageExceptionCodes } from "../exceptions/image.exception";
 import { createReadStream } from 'fs';
 import { join } from 'path';
-import { ImageService } from "../service/image.service";
 
 @Controller('/public')
 export class PublicController {
@@ -40,10 +43,17 @@ export class PublicController {
         try {
             filePath = await this.imageService.resize(filePath, size);
         } catch (e) {
+            if (e instanceof BaseException) {
+                if (e.code === FileSystemExceptionCodes.FILE_NOT_FOUND) {
+                    throw new NotFoundException(e.message);
+                }
+                if (inArray(e.code, [ImageExceptionCodes.INVALID_SIZE, ImageExceptionCodes.INVALID_EXTENSION])) {
+                    throw new BadRequestException(e.message);
+                }
+            }
             throw new InternalServerErrorException(e.message);
         }
 
-        console.log(filePath);
         return new StreamableFile(createReadStream(join(process.cwd(), filePath)));
     }
 }
