@@ -14,6 +14,10 @@ export class ImageService {
     private defaultSize = imagesConfig.defaultSize;
 
     public async resize(sourcePath: string, size?: string): Promise<string> {
+        if (size === undefined) {
+            size = this.defaultSize;
+        }
+
         this.checkImage(sourcePath);
         const [width, height] = this.getSize(size);
         const [originH, originW, type] = Object.values(sizeOf(sourcePath));
@@ -75,8 +79,8 @@ export class ImageService {
         }
     }
 
-    private getSize(size?: string): [number, number] {
-        const [x, y] = (size ?? this.defaultSize).split('x');
+    private getSize(size: string): [number, number] {
+        const [x, y] = size.split('x');
         return [parseInt(x), parseInt(y)];
     }
 

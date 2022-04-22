@@ -43,6 +43,7 @@ export class PublicController {
             throw new InternalServerErrorException(e.message);
         }
 
+        console.log(filePath);
         return new StreamableFile(createReadStream(join(process.cwd(), filePath)));
     }
 }
