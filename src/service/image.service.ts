@@ -76,11 +76,6 @@ export class ImageService {
             throw error;
         }
 
-        const [resultH, resultW] = Object.values(sizeOf(targetPath));
-        console.log(`Source: ${sourceW}/${sourceH} = ${sourceW/sourceH}`);
-        console.log(`Target: ${targetW}/${targetH} = ${targetW/targetH}`);
-        console.log(`Result: ${resultW}/${resultH} = ${resultW/resultH}`);
-
         return targetPath;
     }
 
