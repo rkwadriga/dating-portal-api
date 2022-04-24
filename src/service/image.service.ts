@@ -40,11 +40,12 @@ export class ImageService {
         // Calculate size of borders
         let [borderW, borderH] = [0, 0];
         const [sourceK, targetK] = [sourceW / sourceH, targetW / targetH];
-        const K = sourceK / targetK;
-        if (K < 1) {
+        if (sourceK < targetK) {
             borderW = (targetK * sourceH - sourceW) / 2;
-        } else if (K > 1) {
+        } else if (sourceK > targetK) {
             borderH = (sourceW / targetK - sourceH) / 2;
+        } else if (sourceK === targetK) {
+            // The same ratio of width and height as in original image: no need borders
         } else if (sourceK < 1) {
             borderW = (sourceW / sourceK - sourceW) / 2;
         } else if (sourceK > 1) {
@@ -74,6 +75,11 @@ export class ImageService {
         if (error) {
             throw error;
         }
+
+        const [resultH, resultW] = Object.values(sizeOf(targetPath));
+        console.log(`Source: ${sourceW}/${sourceH} = ${sourceW/sourceH}`);
+        console.log(`Target: ${targetW}/${targetH} = ${targetW/targetH}`);
+        console.log(`Result: ${resultW}/${resultH} = ${resultW/resultH}`);
 
         return targetPath;
     }
