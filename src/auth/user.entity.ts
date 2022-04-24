@@ -7,10 +7,11 @@ import {
     CreateDateColumn,
     UpdateDateColumn
 } from "typeorm";
-import {Photo} from "../profile/photo.entity";
-import {Profile} from "../profile/profile.entity";
-import {Settings} from "../profile/settings.entity";
-import {Contact} from "../dating/contact.entity";
+import { Photo } from "../profile/photo.entity";
+import { Profile } from "../profile/profile.entity";
+import { Settings } from "../profile/settings.entity";
+import { Contact } from "../dating/contact.entity";
+import { yearsFromDate } from "../helpers/time.helper";
 
 @Entity()
 export class User {
@@ -94,8 +95,6 @@ export class User {
     }
 
     public getAge(): number {
-        const diff = (new Date()).valueOf() - (new Date(this.profile.birthday)).valueOf();
-
-        return Math.ceil(diff / (1000 * 3600 * 24 * 365));
+        return yearsFromDate(this.profile.birthday);
     }
 }

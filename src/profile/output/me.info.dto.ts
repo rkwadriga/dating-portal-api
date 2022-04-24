@@ -19,6 +19,12 @@ export class MeInfoDto extends ProfileInfoDto {
     @Expose()
     showGender: Gender;
 
+    @Expose()
+    showAgeFrom: number;
+
+    @Expose()
+    showAgeTo: number;
+
     constructor(user: User) {
         super(user);
         this.email = user.email;
@@ -26,5 +32,7 @@ export class MeInfoDto extends ProfileInfoDto {
         this.imagesLimit = user.settings?.imagesLimit ?? Number(process.env.DEFAULT_USER_IMAGES_LIMIT);
         this.maximumImageSIze = user.settings?.maximumImageSIze ?? Number(process.env.DEFAULT_USER_MAX_IMAGE_SIZE);
         this.showGender = user.settings?.showGender;
+        this.showAgeFrom = user.settings?.showAgeFrom;
+        this.showAgeTo = user.settings?.showAgeTo;
     }
 }

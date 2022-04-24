@@ -12,6 +12,12 @@ export class Settings {
     @Length(4, 6)
     showGender?: Gender;
 
+    @Column({type: 'tinyint', nullable: true})
+    showAgeFrom?: number;
+
+    @Column({type: 'tinyint', nullable: true})
+    showAgeTo?: number;
+
     @Column({nullable: true})
     imagesLimit: number;
 

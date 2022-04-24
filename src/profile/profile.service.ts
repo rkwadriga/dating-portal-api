@@ -1,20 +1,20 @@
-import {InjectRepository} from "@nestjs/typeorm";
-import {User} from "../auth/user.entity";
-import {Repository} from "typeorm";
-import {HttpException, HttpStatus, Injectable} from "@nestjs/common";
-import {UpdateProfileDto} from "./input/update.profile.dto";
-import {hashPassword} from "../auth/auth.service";
-import {DeleteResult} from "typeorm/query-builder/result/DeleteResult";
-import {HttpErrorCodes} from "../api/api.http";
-import {FileSystemService} from "../service/fileSystem.service";
-import {Photo} from "./photo.entity";
-import {SelectQueryBuilder} from "typeorm/query-builder/SelectQueryBuilder";
-import {Profile} from "./profile.entity";
-import {Settings} from "./settings.entity";
-import {bytesToReadable} from "../helpers/string.helper";
-import {inArray, removeByIndex} from "../helpers/array.helper";
-import {base64ToFile} from "../helpers/file.helper";
-import {UpdatePasswordDto} from "./input/update.password.dto";
+import { InjectRepository } from "@nestjs/typeorm";
+import { User } from "../auth/user.entity";
+import { Repository } from "typeorm";
+import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import { UpdateProfileDto } from "./input/update.profile.dto";
+import { hashPassword } from "../auth/auth.service";
+import { DeleteResult } from "typeorm/query-builder/result/DeleteResult";
+import { HttpErrorCodes } from "../api/api.http";
+import { FileSystemService } from "../service/fileSystem.service";
+import { Photo } from "./photo.entity";
+import { SelectQueryBuilder } from "typeorm/query-builder/SelectQueryBuilder";
+import { Profile } from "./profile.entity";
+import { Settings } from "./settings.entity";
+import { bytesToReadable } from "../helpers/string.helper";
+import { inArray, removeByIndex } from "../helpers/array.helper";
+import { base64ToFile } from "../helpers/file.helper";
+import { UpdatePasswordDto } from "./input/update.password.dto";
 import * as bcrypt from "bcrypt";
 
 export enum UserInitializationItem {
@@ -257,6 +257,14 @@ export class ProfileService {
         if (user.settings.showGender !== input.showGender) {
             changed = true;
             user.settings.showGender = input.showGender;
+        }
+        if (user.settings.showAgeFrom !== input.showAgeFrom) {
+            changed = true;
+            user.settings.showAgeFrom = input.showAgeFrom;
+        }
+        if (user.settings.showAgeTo !== input.showAgeTo) {
+            changed = true;
+            user.settings.showAgeTo = input.showAgeTo;
         }
 
         if (changed) {

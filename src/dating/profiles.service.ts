@@ -5,6 +5,16 @@ import {Repository} from "typeorm";
 import {Photo} from "../profile/photo.entity";
 import {Settings} from "../profile/settings.entity";
 import {Contact, ContactType} from "./contact.entity";
+import {
+    addDays,
+    addHours,
+    addMinutes,
+    addYears,
+    DATE_FORMAT,
+    formatDate,
+    toDate,
+    yearsFromDate
+} from "../helpers/time.helper";
 
 @Injectable()
 export class ProfilesService {
@@ -45,11 +55,35 @@ export class ProfilesService {
         if (user.settings === undefined) {
             user.settings = await this.settingsRepository.findOne({user});
         }
+
+        // Get only users who are not seen yet
         let condition = 'user.id != :current_user_id AND contactTo.fromUser IS NULL';
         let parameters = {'current_user_id': user.id};
-        if (user.settings.showGender !== null) {
+
+        // Filter by gender
+        if (next && user.settings.showGender !== null) {
             condition += ' AND profile.gender = :showing_gender';
             parameters['showing_gender'] = user.settings.showGender;
+        }
+
+        // Filter by age
+        if (next && (user.settings.showAgeFrom !== null || user.settings.showAgeTo !== null)) {
+            condition += ' AND profile.birthday ';
+            let [from, to] = [null, null];
+            if (user.settings.showAgeFrom !== null) {
+                from = parameters['date_from'] = formatDate(addYears(-user.settings.showAgeFrom), DATE_FORMAT);
+            }
+            if (user.settings.showAgeTo !== null) {
+                to = parameters['date_to'] = formatDate(addYears(-(user.settings.showAgeTo + 1)), DATE_FORMAT);
+            }
+
+            if (from !== null && to !== null) {
+                condition += 'BETWEEN :date_to AND :date_from'
+            } else if (from !== null) {
+                condition += '<= :date_from';
+            } else if (to !== null) {
+                condition += '>= :date_to';
+            }
         }
 
         const nextProfile = await this.userRepository
