@@ -1,20 +1,13 @@
-import {InjectRepository} from "@nestjs/typeorm";
-import {Injectable} from "@nestjs/common";
-import {User} from "../auth/user.entity";
-import {Repository} from "typeorm";
-import {Photo} from "../profile/photo.entity";
-import {Settings} from "../profile/settings.entity";
-import {Contact, ContactType} from "./contact.entity";
-import {
-    addDays,
-    addHours,
-    addMinutes,
-    addYears,
-    DATE_FORMAT,
-    formatDate,
-    toDate,
-    yearsFromDate
-} from "../helpers/time.helper";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Injectable } from "@nestjs/common";
+import { User } from "../auth/user.entity";
+import { Repository } from "typeorm";
+import { Photo } from "../profile/photo.entity";
+import { Settings } from "../profile/settings.entity";
+import { Contact, ContactType } from "./contact.entity";
+import { addYears, DATE_FORMAT, formatDate } from "../helpers/time.helper";
+import { LoggerService } from "../service/logger.service";
+import { LogsPaths } from "../config/logger.config";
 
 @Injectable()
 export class ProfilesService {
@@ -26,7 +19,8 @@ export class ProfilesService {
         @InjectRepository(Settings)
         private readonly settingsRepository: Repository<Settings>,
         @InjectRepository(Contact)
-        private readonly contactRepository: Repository<Contact>
+        private readonly contactRepository: Repository<Contact>,
+        private readonly logger: LoggerService
     ) {}
 
     public async getProfileInfoByUuid(uuid: string, forUser: User): Promise<User | null> {

@@ -11,6 +11,7 @@ import { Gender } from "../profile/profile.entity";
 import { imagesConfig } from "../config/images.config";
 import { FileSystemException, FileSystemExceptionCodes } from "../exceptions/fileSystem.exception";
 import { ImageException, ImageExceptionCodes } from "../exceptions/image.exception";
+import * as path from "path";
 
 @Injectable()
 export class FileSystemService {
@@ -24,6 +25,10 @@ export class FileSystemService {
 
     public getImgDir(): string {
         return process.env.UPLOAD_DIRECTORY;
+    }
+
+    public getLogsDir(): string {
+        return process.env.LOGS_DIRECTORY;
     }
 
     public fileExist(filePath: string): boolean {
@@ -77,6 +82,67 @@ export class FileSystemService {
         this.delete(this.getUserPhotosPath(uuid));
     }
 
+    public getFileDir(file: string, autoCreate = false): string {
+        const dir = path.dirname(file);
+        if (autoCreate) {
+            this.createDir(dir);
+        }
+        return dir;
+    }
+
+    public fileSIze(file: string): number {
+        return this.fileExist(file) ? fs.statSync(file).size : 0;
+    }
+
+    public scandir(dir: string): string[] {
+        return fs.existsSync(dir) ? fs.readdirSync(dir) : [];
+    }
+
+    public createDir(path: string): void {
+        if (fs.existsSync(path)) {
+            return;
+        }
+
+        let createdPath = '';
+        path.split('/').forEach(dir => {
+            createdPath += dir + '/';
+            if (!fs.existsSync(createdPath)) {
+                fs.mkdirSync(createdPath);
+            }
+        });
+    }
+
+    public delete(path: string): void {
+        if (!fs.existsSync(path)) {
+            return;
+
+        }
+        if (fs.lstatSync(path).isDirectory()) {
+            fs.rmdirSync(path, {recursive: true});
+        } else {
+            fs.unlinkSync(path);
+        }
+    }
+
+    public rename(oldPath: string, newName: string): void {
+        if (oldPath === newName) {
+            return;
+        }
+        if (!fs.existsSync(oldPath)) {
+            return;
+        }
+        if (fs.existsSync(newName)) {
+            this.delete(oldPath);
+            return;
+        }
+
+        fs.renameSync(oldPath, newName);
+    }
+
+    public write(file: string, data: string, append = false): void {
+        fs.writeFileSync(file, data, {flag: append ? 'a' : 'w+'});
+    }
+
     private getFileMd5(file: Express.Multer.File): string {
         let fileContent;
         if (file.size > this.md5Buffer * 2) {
@@ -101,32 +167,6 @@ export class FileSystemService {
         }
 
         return this.getFileMd5(file) + '.' + ext;
-    }
-
-    private createDir(path: string): void {
-        if (fs.existsSync(path)) {
-            return;
-        }
-
-        let createdPath = '';
-        path.split('/').forEach(dir => {
-            createdPath += dir + '/';
-            if (!fs.existsSync(createdPath)) {
-                fs.mkdirSync(createdPath);
-            }
-        });
-    }
-
-    private delete(path: string): void {
-        if (!fs.existsSync(path)) {
-            return;
-
-        }
-        if (fs.lstatSync(path).isDirectory()) {
-            fs.rmdirSync(path, {recursive: true});
-        } else {
-            fs.unlinkSync(path);
-        }
     }
 
     private getDefaultImgPath(): string {

@@ -11,12 +11,14 @@ import { Settings } from "../profile/settings.entity";
 import { Contact } from "./contact.entity";
 import { DatingService } from "./dating.service";
 import { PairsController } from "./pairs.controller";
+import { LoggerService } from "../service/logger.service";
+import { FileSystemService } from "../service/fileSystem.service";
 
 @Module({
     imports: [
         TypeOrmModule.forFeature([User, Photo, Profile, Settings, Contact])
     ],
-    providers: [LocalStrategy, JwtStrategy, ProfilesService, DatingService],
+    providers: [LocalStrategy, JwtStrategy, ProfilesService, DatingService, LoggerService, FileSystemService],
     controllers: [ProfilesController, PairsController]
 })
 export class DatingModule {

@@ -1,6 +1,8 @@
-import {Injectable} from "@nestjs/common";
-import {Observable} from 'rxjs';
-import {IncomingMessage} from "http";
+import { Injectable } from "@nestjs/common";
+import { Observable } from 'rxjs';
+import { IncomingMessage } from "http";
+import { LoggerService } from "./logger.service";
+import { LogsPaths } from "../config/logger.config";
 
 const WebSocketServer = require('ws');
 
@@ -13,7 +15,9 @@ export interface ConnectionData {
 export class SocketService {
     private transport: any;
 
-    constructor() {
+    constructor(
+        private readonly logger: LoggerService
+    ) {
         this.transport = new WebSocketServer.Server({
             port: 9111
         });
@@ -37,6 +41,6 @@ export class SocketService {
     }
 
     public onMessage(event: MessageEvent): void {
-        console.log(event.data);
+        this.logger.info('New socket message', LogsPaths.SOCKET, event.data)
     }
 }
