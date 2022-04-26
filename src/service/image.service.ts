@@ -12,7 +12,7 @@ import { FileSystemException, FileSystemExceptionCodes } from "../exceptions/fil
 export class ImageService {
     private allowedExtensions = imagesConfig.allowedExtensions;
     private defaultSize = imagesConfig.defaultSize;
-    private maxSize = imagesConfig.maxSize;
+    private allowedSizes = imagesConfig.allowedSizes;
 
     public async resize(sourcePath: string, size?: string): Promise<string> {
         if (!size) {
@@ -41,15 +41,11 @@ export class ImageService {
         let [borderW, borderH] = [0, 0];
         const [sourceK, targetK] = [sourceW / sourceH, targetW / targetH];
         if (sourceK < targetK) {
+            // Need to make an image wider to make it's width and height ratio as in requested image
             borderW = (targetK * sourceH - sourceW) / 2;
         } else if (sourceK > targetK) {
+            // Need to make an image higher to make it's width and height ratio as in requested image
             borderH = (sourceW / targetK - sourceH) / 2;
-        } else if (sourceK === targetK) {
-            // The same ratio of width and height as in original image: no need borders
-        } else if (sourceK < 1) {
-            borderW = (sourceW / sourceK - sourceW) / 2;
-        } else if (sourceK > 1) {
-            borderH = (sourceH * sourceK - sourceH) / 2;
         }
 
         // Add borders to original image, resize it and save with a new name
@@ -85,7 +81,7 @@ export class ImageService {
         }
         const ext = getFileExt(path);
         if (!inArray(ext, this.allowedExtensions)) {
-            throw new ImageException(`Images with extension "${ext}" are not allowed`, ImageExceptionCodes.INVALID_EXTENSION);
+            throw new ImageException(`Images with extension "${ext}" are not allowed`, ImageExceptionCodes.INVALID_SIZE);
         }
     }
 
@@ -103,13 +99,11 @@ export class ImageService {
     }
 
     private checkSize(size: string): void {
-        // Check the size string format
         if (!size.match(/^\d+x\d+$/)) {
             throw new ImageException(`Invalid size format: "${size}"`, ImageExceptionCodes.INVALID_SIZE);
         }
-        const [targetW, targetH, maxW, maxH] = [...ImageService.getSize(size), ...ImageService.getSize(this.maxSize)];
-        if (targetW > maxW || targetH > maxH) {
-            throw new ImageException(`Too big size: ${size}. Maximum size is ${this.maxSize}`, ImageExceptionCodes.INVALID_SIZE);
+        if (!inArray(size, this.allowedSizes)) {
+            throw new ImageException(`Invalid size ${size}. Allowed sizes: ${this.allowedSizes.join(', ')}`);
         }
     }
 }
