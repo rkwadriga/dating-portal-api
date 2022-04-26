@@ -1,9 +1,10 @@
-import {Injectable} from "@nestjs/common";
-import {Repository} from "typeorm";
-import {ContactType, Contact} from "./contact.entity";
-import {InjectRepository} from "@nestjs/typeorm";
-import {User} from "../auth/user.entity";
-import {Photo} from "../profile/photo.entity";
+import { Injectable } from "@nestjs/common";
+import { Repository } from "typeorm";
+import { ContactType, Contact } from "./contact.entity";
+import { InjectRepository } from "@nestjs/typeorm";
+import { User } from "../auth/user.entity";
+import { Photo } from "../profile/photo.entity";
+import { DatingException, DatingExceptionCodes } from "../exceptions/dating.exception";
 
 @Injectable()
 export class DatingService {
@@ -33,12 +34,12 @@ export class DatingService {
 
     public async like(fromUser: User, toUserUuid: string): Promise<boolean> {
         if (fromUser.uuid === toUserUuid) {
-            throw new Error('You can not luke yourself');
+            throw new DatingException('You can not luke yourself', DatingExceptionCodes.INVALID_PAIR);
         }
 
         const toUser = await this.userRepository.findOne({uuid: toUserUuid});
         if (toUser === undefined) {
-            throw new Error(`User ${toUserUuid} not found`);
+            throw new DatingException(`User ${toUserUuid} not found`, DatingExceptionCodes.PAIR_NOT_FOUND);
         }
 
         // Create or update contact

@@ -1,10 +1,11 @@
-import {Injectable} from "@nestjs/common";
-import {Repository} from "typeorm";
-import {Message} from "./message.entity";
-import {InjectRepository} from "@nestjs/typeorm";
-import {WsMessage} from "../chat/chat.gateway";
-import {v4 as uuidv4} from 'uuid';
-import {User} from "../auth/user.entity";
+import { Injectable } from "@nestjs/common";
+import { Repository } from "typeorm";
+import { Message } from "./message.entity";
+import { InjectRepository } from "@nestjs/typeorm";
+import { WsMessage } from "../chat/chat.gateway";
+import { v4 as uuidv4 } from 'uuid';
+import { User } from "../auth/user.entity";
+import { DialogException, DialogExceptionCodes } from "../exceptions/dialog.exception";
 
 export interface Dialog {
     count: number,
@@ -59,7 +60,7 @@ export class DialogService {
         }
         const partner = await this.userRepository.findOne({uuid: withUserUuid});
         if (partner === undefined) {
-            throw new Error(`User #${withUserUuid} not found`);
+            throw new DialogException(`User #${withUserUuid} not found`, DialogExceptionCodes.PAIR_NOT_FOUND);
         }
 
         let request = this.messageRepository.createQueryBuilder('m')

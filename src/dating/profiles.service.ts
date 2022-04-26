@@ -7,7 +7,6 @@ import { Settings } from "../profile/settings.entity";
 import { Contact, ContactType } from "./contact.entity";
 import { addYears, DATE_FORMAT, formatDate } from "../helpers/time.helper";
 import { LoggerService } from "../service/logger.service";
-import { LogsPaths } from "../config/logger.config";
 
 @Injectable()
 export class ProfilesService {

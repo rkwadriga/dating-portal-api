@@ -4,6 +4,9 @@ export enum LogsPaths {
     SOCKET,
     CHAT,
     PROFILE,
+    PUBLIC,
+    DATING,
+    DIALOG
 }
 
 export const loggerConfig = {
@@ -23,6 +26,19 @@ export const loggerConfig = {
         [LogsPaths.PROFILE]: {
             info: 'profile/info.log',
             error: 'profile/error.log',
+        },
+        [LogsPaths.PUBLIC]: {
+            info: 'public/info.log',
+            error: 'public/error.log',
+        },
+        [LogsPaths.DATING]: {
+            info: 'dating/info.log',
+            error: 'dating/error.log',
+        }
+        ,
+        [LogsPaths.DIALOG]: {
+            info: 'dialog/info.log',
+            error: 'dialog/error.log',
         }
     },
     fileSize: '2MB',

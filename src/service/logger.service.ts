@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { LogsPaths, loggerConfig } from "../config/logger.config";
 import { str2Bytes } from "../helpers/number.helper";
 import { FileSystemService } from "./fileSystem.service";
-import {formatDate} from "../helpers/time.helper";
+import { formatDate } from "../helpers/time.helper";
 
 @Injectable()
 export class LoggerService {

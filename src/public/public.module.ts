@@ -5,12 +5,13 @@ import { User } from "../auth/user.entity";
 import { Profile } from "../profile/profile.entity";
 import { FileSystemService } from "../service/fileSystem.service";
 import { ImageService } from "../service/image.service";
+import { LoggerService } from "../service/logger.service";
 
 @Module({
     imports: [
         TypeOrmModule.forFeature([User, Profile])
     ],
-    providers: [FileSystemService, ImageService],
+    providers: [FileSystemService, ImageService, LoggerService],
     controllers: [PublicController]
 })
 export class PublicModule {

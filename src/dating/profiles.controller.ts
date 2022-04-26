@@ -1,27 +1,34 @@
 import {
+    BadRequestException,
     ClassSerializerInterceptor,
     Controller,
     Delete,
     Get,
+    NotFoundException,
+    Param,
+    ParseUUIDPipe,
     Post,
-    NotFoundException, Param, ParseUUIDPipe,
     SerializeOptions,
     UseGuards,
-    UseInterceptors, BadRequestException
-} from "@nestjs/common";
-import {ProfilesService} from "./profiles.service";
-import {AuthGuardJwt} from "../auth/guards/auth-guard.jwt";
-import {CurrentUser} from "../auth/current-user.decorator";
-import {User} from "../auth/user.entity";
-import {ProfileInfoDto} from "./output/profile.info.dto";
-import {DatingService} from "./dating.service";
+    UseInterceptors
+} from  "@nestjs/common";
+import { ProfilesService } from  "./profiles.service";
+import { AuthGuardJwt } from  "../auth/guards/auth-guard.jwt";
+import { CurrentUser } from  "../auth/current-user.decorator";
+import { User } from  "../auth/user.entity";
+import { ProfileInfoDto } from  "./output/profile.info.dto";
+import { DatingService } from  "./dating.service";
+import { DatingException, DatingExceptionCodes } from  "../exceptions/dating.exception";
+import { LoggerService } from  "../service/logger.service";
+import { LogsPaths } from  "../config/logger.config";
 
 @Controller('/api/dating/profiles')
 @SerializeOptions({strategy: 'excludeAll'})
 export class ProfilesController {
     constructor (
         private readonly profilesService: ProfilesService,
-        private readonly datingService: DatingService
+        private readonly datingService: DatingService,
+        private readonly logger: LoggerService
     ) {}
 
     @Get('/next')
@@ -49,6 +56,7 @@ export class ProfilesController {
     async findOne(@CurrentUser() user: User, @Param('id', ParseUUIDPipe) id: string) {
         const profile = await this.profilesService.getProfileInfoByUuid(id, user);
         if (!profile) {
+            this.logger.error(`Profile nut found by uuid: "${id}"`, LogsPaths.PROFILE);
             throw new NotFoundException(`Profile not found`);
         }
 
@@ -62,7 +70,8 @@ export class ProfilesController {
         try {
             isPair = await this.datingService.like(user, id);
         } catch (e) {
-            if (e.message.includes('not found')) {
+            this.logger.error(`Can not like pair "${id}": ${e.message}`, LogsPaths.PROFILE);
+            if (e instanceof DatingException && e.code === DatingExceptionCodes.PAIR_NOT_FOUND) {
                 throw new NotFoundException(`User ${id} not found`);
             } else {
                 throw new BadRequestException(`Can not like user ${id}: ${e.message}`);

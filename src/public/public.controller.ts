@@ -1,11 +1,12 @@
-import {
+import { 
     BadRequestException,
     Controller,
     Get,
     InternalServerErrorException,
     NotFoundException,
-    Param, StreamableFile
-} from "@nestjs/common";
+    Param,
+    StreamableFile
+ } from "@nestjs/common";
 import { FileSystemService } from "../service/fileSystem.service";
 import { ImageService } from "../service/image.service";
 import { BaseException } from "../exceptions/base.exception";
@@ -14,12 +15,15 @@ import { inArray } from "../helpers/array.helper";
 import { ImageExceptionCodes } from "../exceptions/image.exception";
 import { createReadStream } from 'fs';
 import { join } from 'path';
+import { LoggerService } from "../service/logger.service";
+import { LogsPaths } from "../config/logger.config";
 
 @Controller('/public')
 export class PublicController {
     constructor (
         private readonly fileSystem: FileSystemService,
-        private readonly imageService: ImageService
+        private readonly imageService: ImageService,
+        private readonly logger: LoggerService
     ) {}
 
     @Get('/img/:userID/:path?/:size?')
@@ -37,12 +41,14 @@ export class PublicController {
 
         // Check is file exist
         if (!this.fileSystem.fileExist(filePath)) {
+            this.logger.error(`Can not find an image ${filePath}`, LogsPaths.PUBLIC);
             throw new NotFoundException(`File ${filePath} does not exist`);
         }
         // Resize image
         try {
             filePath = await this.imageService.resize(filePath, size);
         } catch (e) {
+            this.logger.error(`Can not resize an image ${filePath}: ${e.message}`, LogsPaths.PUBLIC);
             if (e instanceof BaseException) {
                 if (e.code === FileSystemExceptionCodes.FILE_NOT_FOUND) {
                     throw new NotFoundException(e.message);
