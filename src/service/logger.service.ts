@@ -21,7 +21,7 @@ export class LoggerService {
     }
 
     private writeMessage (level: string, path: LogsPaths, msg: string, context: any) {
-        let message = `${formatDate()}) ${msg}`;
+        let message = formatDate() + ' ' + msg;
         if (context !== undefined) {
             if (typeof context !== 'string') {
                 context = JSON.stringify(context);
