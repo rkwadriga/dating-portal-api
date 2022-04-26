@@ -6,6 +6,8 @@ export const DATETIME_FORMAT = 'Y-m-d H:i:s';
 
 export const DATE_FORMAT = 'Y-m-d';
 
+export const monthsNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
 export const toDate = (time: Date | string | null): Date => {
     if (typeof time === 'string') {
         return new Date(time);
@@ -217,6 +219,38 @@ export const addYears = (years: number, date: Date | string | null = null): Date
     return new Date(year > 0 ? stringDate.replace(DATETIME_FULL_FORMAT_PATTERN, `$1 ${year} $3`) : null);
 }
 
+export const addMonths = (moths: number, date: Date | string | null = null): Date => {
+    const pattern = /(\w+) \w+ (\d+) \d+ ([\w\d: +\(\)]+)/;
+    date = toDate(date);
+    const matches = date.toString().match(pattern);
+    if (matches === null) {
+        return date;
+    }
+
+    let [currentYear, currentMoth, yearsDiff, mothsDiff] = [date.getFullYear(), date.getMonth(), 0, 0];
+    let newMoths = currentMoth + moths;
+    const absMoths = Math.abs(newMoths);
+    if (absMoths > 11) {
+        currentMoth = 0;
+        mothsDiff = absMoths % 12;
+        yearsDiff = (absMoths - mothsDiff) / 12;
+        if (newMoths < 0) {
+            yearsDiff *= -1;
+            mothsDiff = 12 - mothsDiff;
+        }
+    } else if (newMoths < 0) {
+        currentMoth = 0;
+        yearsDiff = -1;
+        mothsDiff = 12 + newMoths;
+    } else {
+        mothsDiff = moths;
+    }
+
+    const [newYear, newMoth] = [currentYear + yearsDiff, monthsNames[currentMoth + mothsDiff]];
+
+    return new Date(date.toString().replace(pattern, `$1 ${newMoth} $2 ${newYear} $3`));
+}
+
 export const addDays = (days: number, date: Date | string | null = null): Date => {
     return addHours(days * 24, date);
 }
@@ -231,4 +265,30 @@ export const addMinutes = (minutes: number, date: Date | string | null = null): 
 
 export const addSeconds = (seconds: number, to: Date | string | null = null): Date => {
     return new Date(toDate(to).valueOf() + seconds * 1000);
+}
+
+export const addPeriod = (period: string, to: Date | string | null = null): Date => {
+    let date = toDate(to);
+    const matches = period.toLowerCase().match(/([-]*)[ ]*(\d+)[ ]*(day|week|month|year)/);
+    if (matches === null) {
+        return date;
+    }
+
+    let [time, rate] = [parseInt(matches[2]), matches[3]];
+    if (matches[1] != '') {
+        time = -time;
+    }
+
+    switch (rate) {
+        case 'day':
+            return addDays(time, date);
+        case 'week':
+            return addDays(time * 7, date);
+        case 'month':
+            return addMonths(time, date);
+        case 'year':
+            return addYears(time, date);
+    }
+
+    return date;
 }

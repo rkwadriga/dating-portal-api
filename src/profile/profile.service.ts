@@ -1,6 +1,6 @@
 import { InjectRepository } from "@nestjs/typeorm";
 import { User } from "../auth/user.entity";
-import { Repository } from "typeorm";
+import { Connection, Repository } from "typeorm";
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { UpdateProfileDto } from "./input/update.profile.dto";
 import { hashPassword } from "../auth/auth.service";
@@ -16,6 +16,7 @@ import { inArray, removeByIndex } from "../helpers/array.helper";
 import { base64ToFile } from "../helpers/file.helper";
 import { UpdatePasswordDto } from "./input/update.password.dto";
 import * as bcrypt from "bcrypt";
+import { ProfileException, ProfileExceptionCodes } from "../exceptions/profile.exception";
 
 export enum UserInitializationItem {
     Settings,
@@ -33,6 +34,7 @@ export interface ImageData {
 @Injectable()
 export class ProfileService {
     constructor(
+        private readonly connection: Connection,
         @InjectRepository(User)
         private readonly userRepository: Repository<User>,
         @InjectRepository(Photo)
@@ -88,13 +90,28 @@ export class ProfileService {
             throw new HttpException({status, error, message: errors}, status);
         }
 
-        // Update profile
-        await this.updateProfile(user, input);
+        // Begin transaction
+        const queryRunner = this.connection.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
 
-        // Update settings
-        await this.updateSettings(user, input);
+        try {
+            // Update profile
+            await this.updateProfile(user, input);
 
-        return this.userRepository.save(Object.assign(user, input));
+            // Update settings
+            await this.updateSettings(user, input);
+
+            // Update user
+            await this.userRepository.save(Object.assign(user, input));
+        } catch (e) {
+            await queryRunner.rollbackTransaction();
+            throw new ProfileException(`Can not create user: ${e.message}`, ProfileExceptionCodes.UPDATE_ERROR);
+        } finally {
+            await queryRunner.release();
+        }
+
+        return user;
     }
 
     public async delete(user: User): Promise<DeleteResult> {
@@ -148,7 +165,10 @@ export class ProfileService {
             if (photo.isAvatar) {
                 // Check the avatar size
                 if (photo.size > userMaximumImageSIze) {
-                    throw new Error(`File "${photo.name}" is too big (filesize is ${bytesToReadable(photo.size)}, maximum size: ${bytesToReadable(userMaximumImageSIze)})`);
+                    throw new ProfileException(
+                        `File "${photo.name}" is too big (filesize is ${bytesToReadable(photo.size)}, maximum size: ${bytesToReadable(userMaximumImageSIze)})`,
+                        ProfileExceptionCodes.MAX_PHOTO_SIZE_EXCITED
+                    );
                 }
                 // Remove and avatar from photos
                 removeByIndex(index, photos);
@@ -162,7 +182,10 @@ export class ProfileService {
         photos.forEach(photo => {
             // Check the photo size
             if (photo.size > userMaximumImageSIze) {
-                throw new Error(`File "${photo.name}" is too big (filesize is ${bytesToReadable(photo.size)}, maximum size: ${bytesToReadable(userMaximumImageSIze)})`);
+                throw new ProfileException(
+                    `File "${photo.name}" is too big (filesize is ${bytesToReadable(photo.size)}, maximum size: ${bytesToReadable(userMaximumImageSIze)})`,
+                    ProfileExceptionCodes.MAX_PHOTO_SIZE_EXCITED
+                );
             }
             // Add photo to files array
             files.push(base64ToFile(photo.name, photo.size, photo.src));
@@ -171,17 +194,36 @@ export class ProfileService {
         // Check is user can upload this count of photos
         const userImagesLimit = await this.getUserImagesLimit(user);
         if (files.length > userImagesLimit) {
-            throw new Error(`Can not upload more than (${userImagesLimit}) photos`);
+            throw new ProfileException(
+                `Can not upload more than (${userImagesLimit}) photos`,
+                ProfileExceptionCodes.PHOTOS_LIMIT_EXCITED
+            );
         }
 
         // Remove old user's photos
-        this.fileSystem.removeUserPhotos(user.uuid);
-        await this.photoRepository.delete({user});
-        user.photos = [];
+        try {
+            this.fileSystem.removeUserPhotos(user.uuid);
+            await this.photoRepository.delete({user});
+            user.photos = [];
+        } catch (e) {
+            throw new ProfileException(`Can not delete user's photos: ${e.message}`, ProfileExceptionCodes.PHOTOS_DELETING_ERROR);
+        }
+
+        // Begin transaction
+        const queryRunner = this.connection.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
 
         // Add new images
-        for (const file of files) {
-            await this.addPhoto(user, file);
+        try {
+            for (const file of files) {
+                await this.addPhoto(user, file);
+            }
+        } catch (e) {
+            await queryRunner.rollbackTransaction();
+            throw new ProfileException(`Can not save user's photos: ${e.message}`, ProfileExceptionCodes.PHOTOS_SAVING_ERROR);
+        } finally {
+            await queryRunner.release();
         }
     }
 
@@ -199,20 +241,24 @@ export class ProfileService {
     public async updatePassword(user: User, data: UpdatePasswordDto) {
         // Compare passwords
         if (data.password !== data.retypedPassword) {
-            throw new Error('Passwords are not match');
+            throw new ProfileException('Passwords are not match', ProfileExceptionCodes.PASSWORD_VALIDATION_ERROR);
         }
         // Check is password is new
         if (data.password === data.oldPassword) {
-            throw new Error('Create a new password');
+            throw new ProfileException('Create a new password', ProfileExceptionCodes.PASSWORD_VALIDATION_ERROR);
         }
         // Check old password
         const isMatch = await bcrypt.compare(data.oldPassword, user.password);
         if (!isMatch) {
-            throw new Error('Invalid current password');
+            throw new ProfileException('Invalid current password', ProfileExceptionCodes.INVALID_PASSWORD);
         }
         // Update password
         user.password = await hashPassword(data.password);
-        await this.userRepository.save(user);
+        try {
+            await this.userRepository.save(user);
+        } catch (e) {
+            throw new ProfileException(`Can's update password: ${e.message}`, ProfileExceptionCodes.PASSWORD_SAVING_ERROR);
+        }
     }
 
     private createPhotoBaseQuery(user: User): SelectQueryBuilder<Photo> {

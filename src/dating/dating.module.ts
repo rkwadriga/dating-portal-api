@@ -13,12 +13,22 @@ import { DatingService } from "./dating.service";
 import { PairsController } from "./pairs.controller";
 import { LoggerService } from "../service/logger.service";
 import { FileSystemService } from "../service/fileSystem.service";
+import { RatingService } from "../service/rating.service";
+import { Rating } from "../profile/rating.entity";
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([User, Photo, Profile, Settings, Contact])
+        TypeOrmModule.forFeature([User, Photo, Profile, Settings, Contact, Rating])
     ],
-    providers: [LocalStrategy, JwtStrategy, ProfilesService, DatingService, LoggerService, FileSystemService],
+    providers: [
+        LocalStrategy,
+        JwtStrategy,
+        ProfilesService,
+        DatingService,
+        LoggerService,
+        FileSystemService,
+        RatingService
+    ],
     controllers: [ProfilesController, PairsController]
 })
 export class DatingModule {

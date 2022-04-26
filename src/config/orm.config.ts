@@ -1,14 +1,14 @@
-import {TypeOrmModuleOptions} from "@nestjs/typeorm";
-import {User} from "../auth/user.entity";
-import {Photo} from "../profile/photo.entity";
-import {Profile} from "../profile/profile.entity";
-import {Settings} from "../profile/settings.entity";
-import {Contact} from "../dating/contact.entity";
-import {Message} from "../dialog/message.entity";
+import { TypeOrmModuleOptions } from "@nestjs/typeorm";
+import { User } from "../auth/user.entity";
+import { Photo } from "../profile/photo.entity";
+import { Profile } from "../profile/profile.entity";
+import { Settings } from "../profile/settings.entity";
+import { Contact } from "../dating/contact.entity";
+import { Message } from "../dialog/message.entity";
+import { Rating } from "../profile/rating.entity";
 
 export default (): TypeOrmModuleOptions => ({
     type: 'mysql',
-    //host: '172.17.0.1',
     host: process.env.DB_HOST,
     port: Number(process.env.DB_PORT),
     username: process.env.DB_USER,
@@ -20,7 +20,8 @@ export default (): TypeOrmModuleOptions => ({
         Profile,
         Settings,
         Contact,
-        Message
+        Message,
+        Rating
     ],
     synchronize: true,
     dropSchema: Boolean(parseInt(process.env.DB_DROP_SCHEMA))

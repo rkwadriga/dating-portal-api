@@ -12,6 +12,7 @@ import { Profile } from "../profile/profile.entity";
 import { Settings } from "../profile/settings.entity";
 import { Contact } from "../dating/contact.entity";
 import { yearsFromDate } from "../helpers/time.helper";
+import { Rating } from "../profile/rating.entity";
 
 @Entity()
 export class User {
@@ -48,13 +49,16 @@ export class User {
     @OneToOne(() => Settings, settings => settings.user)
     settings: Settings;
 
-    avatarPhoto?: Photo;
-
     @OneToMany(() => Contact, contactFrom => contactFrom.fromUser)
     contactFrom: Contact[];
 
     @OneToMany(() => Contact, contactTo => contactTo.toUser)
     contactTo: Contact[];
+
+    @OneToOne(() => Rating, rating => rating.user)
+    rating: Rating;
+
+    public avatarPhoto?: Photo;
 
     public isPair = false;
 

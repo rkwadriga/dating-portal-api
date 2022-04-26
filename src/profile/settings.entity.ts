@@ -1,7 +1,7 @@
-import {Column, Entity, JoinColumn, OneToOne, PrimaryColumn} from "typeorm";
-import {User} from "../auth/user.entity";
-import {Gender} from "./profile.entity";
-import {Length} from "class-validator";
+import { Column, Entity, JoinColumn, OneToOne, PrimaryColumn } from "typeorm";
+import { User } from "../auth/user.entity";
+import { Gender } from "./profile.entity";
+import { Length } from "class-validator";
 
 @Entity()
 export class Settings {

@@ -21,6 +21,7 @@ import { DatingService } from  "./dating.service";
 import { DatingException, DatingExceptionCodes } from  "../exceptions/dating.exception";
 import { LoggerService } from  "../service/logger.service";
 import { LogsPaths } from  "../config/logger.config";
+import { RatingService } from "../service/rating.service";
 
 @Controller('/api/dating/profiles')
 @SerializeOptions({strategy: 'excludeAll'})
@@ -28,7 +29,8 @@ export class ProfilesController {
     constructor (
         private readonly profilesService: ProfilesService,
         private readonly datingService: DatingService,
-        private readonly logger: LoggerService
+        private readonly logger: LoggerService,
+        private readonly ratingService: RatingService
     ) {}
 
     @Get('/next')
@@ -54,6 +56,7 @@ export class ProfilesController {
     @UseGuards(AuthGuardJwt)
     @UseInterceptors(ClassSerializerInterceptor)
     async findOne(@CurrentUser() user: User, @Param('id', ParseUUIDPipe) id: string) {
+        this.ratingService.calculate();
         const profile = await this.profilesService.getProfileInfoByUuid(id, user);
         if (!profile) {
             this.logger.error(`Profile nut found by uuid: "${id}"`, LogsPaths.PROFILE);

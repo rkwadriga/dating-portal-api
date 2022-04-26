@@ -1,16 +1,20 @@
-import {HttpException, HttpStatus, Injectable, UnauthorizedException} from "@nestjs/common";
-import {JwtService} from "@nestjs/jwt";
-import {InjectRepository} from "@nestjs/typeorm";
-import {User} from "./user.entity";
-import {Repository} from "typeorm";
-import {CreateUserDto} from "./input/create.user.dto";
+import { HttpException, HttpStatus, Injectable, UnauthorizedException } from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Connection, Repository } from "typeorm";
+import { User } from "./user.entity";
+import { CreateUserDto } from "./input/create.user.dto";
 import * as bcrypt from "bcrypt";
-import {TokenEntityDto, TokenType} from "./output/token.entity.dto";
-import {RefreshTokenDto} from "./input/refresh.token.dto";
-import {HttpErrorCodes} from "../api/api.http";
-import {v4 as uuidv4} from 'uuid';
-import {Profile} from "../profile/profile.entity";
-import {Settings} from "../profile/settings.entity";
+import { TokenEntityDto, TokenType } from "./output/token.entity.dto";
+import { RefreshTokenDto } from "./input/refresh.token.dto";
+import { HttpErrorCodes } from "../api/api.http";
+import { v4 as uuidv4 } from 'uuid';
+import { Profile } from "../profile/profile.entity";
+import { Settings } from "../profile/settings.entity";
+import { Rating } from "../profile/rating.entity";
+import { LoggerService } from "../service/logger.service";
+import { AuthException, AuthExceptionCodes } from "../exceptions/auth.exception";
+import { LogsPaths } from "../config/logger.config";
 
 export const hashPassword = async (password: string): Promise<string> => {
     return await bcrypt.hash(password, 10);
@@ -19,13 +23,17 @@ export const hashPassword = async (password: string): Promise<string> => {
 @Injectable()
 export class AuthService {
     constructor(
+        private readonly connection: Connection,
         @InjectRepository(User)
         private readonly userRepository: Repository<User>,
         @InjectRepository(Profile)
         private readonly profileRepository: Repository<Profile>,
         @InjectRepository(Settings)
         private readonly settingsRepository: Repository<Settings>,
-        private readonly jwtService: JwtService
+        @InjectRepository(Rating)
+        private readonly ratingRepository: Repository<Rating>,
+        private readonly jwtService: JwtService,
+        private readonly logger: LoggerService
     ) {}
 
     public async createUser(input: CreateUserDto): Promise<User> {
@@ -68,12 +76,29 @@ export class AuthService {
             password: await hashPassword(input.password)
         }
 
-        // Create a user account
-        const user = await this.userRepository.save(userParams);
-        // Create user's profile
-        await this.createProfile(user, input);
-        // Create user's settings
-        await this.createSettings(user, input);
+        let user: User;
+
+        // Begin transaction
+        const queryRunner = this.connection.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+
+        try {
+            // Create a user account
+            user = await this.userRepository.save(userParams);
+            // Create user's profile
+            await this.createProfile(user, input);
+            // Create user's settings
+            await this.createSettings(user, input);
+            // Crate user's rating
+            await this.createRating(user);
+        } catch (e) {
+            await queryRunner.rollbackTransaction();
+            throw new AuthException(`Can not create user: ${e.message}`, AuthExceptionCodes.CREATE_ERROR);
+        } finally {
+            await queryRunner.release();
+            this.logger.info('New user created', LogsPaths.AUTH, user);
+        }
 
         return user;
     }
@@ -152,17 +177,15 @@ export class AuthService {
 
     private async createProfile(user: User, input: CreateUserDto): Promise<Profile>
     {
-        return await this.profileRepository.save({
-            user: user,
-            ...input
-        });
+        return await this.profileRepository.save({user, ...input});
     }
 
     private async createSettings(user: User, input: CreateUserDto): Promise<Profile>
     {
-        return await this.settingsRepository.save({
-            user: user,
-            ...input
-        });
+        return await this.settingsRepository.save({user, ...input});
+    }
+
+    private async createRating(user: User): Promise<Rating> {
+        return this.ratingRepository.save({user});
     }
 }

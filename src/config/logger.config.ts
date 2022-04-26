@@ -1,16 +1,22 @@
 
 export enum LogsPaths {
     SYSTEM,
+    AUTH,
     SOCKET,
     CHAT,
     PROFILE,
     PUBLIC,
     DATING,
-    DIALOG
+    DIALOG,
+    RATING,
 }
 
 export const loggerConfig = {
     files: {
+        [LogsPaths.AUTH]: {
+            info: 'auth/info.log',
+            error: 'auth/error.log',
+        },
         [LogsPaths.SYSTEM]: {
             info: 'system/info.log',
             error: 'system/error.log',
@@ -34,11 +40,14 @@ export const loggerConfig = {
         [LogsPaths.DATING]: {
             info: 'dating/info.log',
             error: 'dating/error.log',
-        }
-        ,
+        },
         [LogsPaths.DIALOG]: {
             info: 'dialog/info.log',
             error: 'dialog/error.log',
+        },
+        [LogsPaths.RATING]: {
+            info: 'rating/info.log',
+            error: 'rating/error.log',
         }
     },
     fileSize: '2MB',
