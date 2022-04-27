@@ -8,7 +8,7 @@ export class Rating {
     userId: number;
 
     @Column({type: 'smallint', nullable: false, default: ratingConfig.defaultRating})
-    ratings: number;
+    rating: number;
 
     @UpdateDateColumn()
     updatedAt: Date;
