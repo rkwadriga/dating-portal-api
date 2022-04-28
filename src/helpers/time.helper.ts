@@ -269,7 +269,7 @@ export const addSeconds = (seconds: number, to: Date | string | null = null): Da
 
 export const addPeriod = (period: string, to: Date | string | null = null): Date => {
     let date = toDate(to);
-    const matches = period.toLowerCase().match(/([-]*)[ ]*(\d+)[ ]*(day|week|month|year)/);
+    const matches = period.toLowerCase().match(/([-]*)[ ]*(\d+)[ ]*(second|minute|hour|day|week|month|year)/);
     if (matches === null) {
         return date;
     }
@@ -280,6 +280,12 @@ export const addPeriod = (period: string, to: Date | string | null = null): Date
     }
 
     switch (rate) {
+        case 'second':
+            return addSeconds(time, date);
+        case 'minute':
+            return addMinutes(time, date);
+        case 'hour':
+            return addHours(time, date);
         case 'day':
             return addDays(time, date);
         case 'week':
