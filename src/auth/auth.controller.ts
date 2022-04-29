@@ -1,25 +1,26 @@
-import { 
+import {
     Body,
     ClassSerializerInterceptor,
     Controller,
-    Get, InternalServerErrorException,
+    Get,
+    InternalServerErrorException,
     Param,
     Post,
     Put,
     SerializeOptions,
     UseGuards,
     UseInterceptors
- } from  "@nestjs/common";
-import { CreateUserDto } from  "./input/create.user.dto";
-import { AuthService } from  "./auth.service";
-import { UserEntityDto } from  "./output/user.entity.dto";
-import { AuthGuardLocal } from  "./guards/auth-guard.local";
-import { CurrentUser } from  "./current-user.decorator";
-import { User } from  "./user.entity";
-import { AuthGuardRefresh } from  "./guards/auth-guard.refresh";
-import { RefreshTokenDto } from  "./input/refresh.token.dto";
-import { LoggerService } from  "../service/logger.service";
-import { LogsPaths } from  "../config/logger.config";
+} from "@nestjs/common";
+import {CreateUserDto} from "./input/create.user.dto";
+import {AuthService} from "./auth.service";
+import {UserEntityDto} from "./output/user.entity.dto";
+import {AuthGuardLocal} from "./guards/auth-guard.local";
+import {CurrentUser} from "./current-user.decorator";
+import {User} from "./user.entity";
+import {AuthGuardRefresh} from "./guards/auth-guard.refresh";
+import {RefreshTokenDto} from "./input/refresh.token.dto";
+import {LoggerService} from "../service/logger.service";
+import {LogsPaths} from "../config/logger.config";
 
 @Controller('/api/auth')
 @SerializeOptions({strategy: 'excludeAll'})
@@ -50,6 +51,7 @@ export class AuthController {
     @UseGuards(AuthGuardLocal)
     @UseInterceptors(ClassSerializerInterceptor)
     async login(@CurrentUser() user: User) {
+        this.logger.info(`User #${user.id} is logged in`, LogsPaths.AUTH);
         return new UserEntityDto(
             user,
             this.authService.getTokenForUser(user)
@@ -61,10 +63,9 @@ export class AuthController {
     @UseInterceptors(ClassSerializerInterceptor)
     async refresh(@Body() input: RefreshTokenDto) {
         const user = await this.authService.refreshUserToken(input);
-        return new UserEntityDto(
-            user,
-            this.authService.getTokenForUser(user)
-        );
+        const newToken = this.authService.getTokenForUser(user);
+        this.logger.info(`User #${user.id} refreshed the token`, LogsPaths.AUTH, {oldToken: input, newToken: newToken});
+        return new UserEntityDto(user, newToken);
     }
 
     @Get('/check-username/:username')
