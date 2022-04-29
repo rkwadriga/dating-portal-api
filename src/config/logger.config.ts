@@ -2,6 +2,7 @@
 export enum LogsPaths {
     SYSTEM,
     AUTH,
+    ACCOUNT,
     SOCKET,
     CHAT,
     PROFILE,
@@ -13,13 +14,17 @@ export enum LogsPaths {
 
 export const loggerConfig = {
     files: {
+        [LogsPaths.SYSTEM]: {
+            info: 'system/info.log',
+            error: 'system/error.log',
+        },
         [LogsPaths.AUTH]: {
             info: 'auth/info.log',
             error: 'auth/error.log',
         },
-        [LogsPaths.SYSTEM]: {
-            info: 'system/info.log',
-            error: 'system/error.log',
+        [LogsPaths.ACCOUNT]: {
+            info: 'account/info.log',
+            error: 'account/error.log',
         },
         [LogsPaths.SOCKET]: {
             info: 'socket/info.log',

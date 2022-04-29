@@ -55,7 +55,7 @@ export class ProfileController {
     async findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
         const profile = await this.profileService.findByUuid(id);
         if (!profile) {
-            this.logger.info(`Profile not found by uuid "${id}"`, LogsPaths.PROFILE);
+            this.logger.info(`Profile not found by uuid "${id}"`, LogsPaths.ACCOUNT);
             throw new NotFoundException(`Profile not found`);
         }
 
@@ -85,8 +85,9 @@ export class ProfileController {
         try {
             // Update user's params
             await this.profileService.update(user, input);
+            this.logger.info(`User #${user.id} updated profile info`, LogsPaths.ACCOUNT, input);
         } catch (e) {
-            this.logger.error(`Can not update user #${user.id}: ${e.message}`, LogsPaths.PROFILE, input);
+            this.logger.error(`Can not update user #${user.id}: ${e.message}`, LogsPaths.ACCOUNT, input);
             throw new InternalServerErrorException(e.message);
         }
 
@@ -98,9 +99,11 @@ export class ProfileController {
     @HttpCode(HttpStatus.NO_CONTENT)
     async delete(@CurrentUser() user: User) {
         try {
-            return await this.profileService.delete(user);
+            const result = await this.profileService.delete(user);
+            this.logger.info(`User #${user.id} deleted his profile`, LogsPaths.ACCOUNT);
+            return result;
         } catch (e) {
-            this.logger.error(`Can not delete user: ${e.message}`, LogsPaths.PROFILE, user);
+            this.logger.error(`Can not delete user: ${e.message}`, LogsPaths.ACCOUNT, user);
             throw new InternalServerErrorException(e.message);
         }
     }
@@ -112,16 +115,16 @@ export class ProfileController {
         await this.profileService.init(user, [UserInitializationItem.Photos, UserInitializationItem.Settings]);
         try {
             await this.profileService.setPhotos(user, photos);
+            this.logger.info(`User #${user.id} uploaded ${photos.length} images`, LogsPaths.ACCOUNT);
         } catch (e) {
-
             if (e instanceof ProfileException && inArray(e.code, [
                 ProfileExceptionCodes.MAX_PHOTO_SIZE_EXCITED,
                 ProfileExceptionCodes.PHOTOS_LIMIT_EXCITED
             ])) {
-                this.logger.info(`User's #${user.id} photos updating failed: ${e.message}`, LogsPaths.PROFILE);
+                this.logger.info(`User's #${user.id} photos updating failed: ${e.message}`, LogsPaths.ACCOUNT);
                 throw new BadRequestException(e.message);
             }
-            this.logger.error(`Can not update user's #${user.id} photos: ${e.message}`, LogsPaths.PROFILE);
+            this.logger.error(`Can not update user's #${user.id} photos: ${e.message}`, LogsPaths.ACCOUNT);
             throw new InternalServerErrorException(e.message);
         }
         return {};
@@ -139,16 +142,17 @@ export class ProfileController {
     async updatePassword(@Body() input: UpdatePasswordDto,  @CurrentUser() user: User) {
         try {
             await this.profileService.updatePassword(user, input);
+            this.logger.info(`User #${user.id} updated password`, LogsPaths.ACCOUNT);
         } catch (e) {
             if (e instanceof ProfileException && inArray(e.code, [
                 ProfileExceptionCodes.PASSWORD_VALIDATION_ERROR,
                 ProfileExceptionCodes.INVALID_PASSWORD
             ])) {
-                this.logger.info(`User's #${user.id} password updating failed: ${e.message}`, LogsPaths.PROFILE);
+                this.logger.info(`User's #${user.id} password updating failed: ${e.message}`, LogsPaths.ACCOUNT);
                 throw new BadRequestException(e.message);
             }
 
-            this.logger.error(`Can not update user's #${user.id} password: ${e.message}`, LogsPaths.PROFILE);
+            this.logger.error(`Can not update user's #${user.id} password: ${e.message}`, LogsPaths.ACCOUNT);
             throw new InternalServerErrorException(e.message);
         }
         return {};
