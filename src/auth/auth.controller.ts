@@ -1,4 +1,4 @@
-import {
+import { 
     Body,
     ClassSerializerInterceptor,
     Controller,
@@ -10,17 +10,17 @@ import {
     SerializeOptions,
     UseGuards,
     UseInterceptors
-} from "@nestjs/common";
-import {CreateUserDto} from "./input/create.user.dto";
-import {AuthService} from "./auth.service";
-import {UserEntityDto} from "./output/user.entity.dto";
-import {AuthGuardLocal} from "./guards/auth-guard.local";
-import {CurrentUser} from "./current-user.decorator";
-import {User} from "./user.entity";
-import {AuthGuardRefresh} from "./guards/auth-guard.refresh";
-import {RefreshTokenDto} from "./input/refresh.token.dto";
-import {LoggerService} from "../service/logger.service";
-import {LogsPaths} from "../config/logger.config";
+ } from "@nestjs/common";
+import { CreateUserDto } from "./input/create.user.dto";
+import { AuthService } from "./auth.service";
+import { UserEntityDto } from "./output/user.entity.dto";
+import { AuthGuardLocal } from "./guards/auth-guard.local";
+import { CurrentUser } from "./current-user.decorator";
+import { User } from "./user.entity";
+import { AuthGuardRefresh } from "./guards/auth-guard.refresh";
+import { RefreshTokenDto } from "./input/refresh.token.dto";
+import { LoggerService } from "../service/logger.service";
+import { LogsPaths } from "../config/logger.config";
 
 @Controller('/api/auth')
 @SerializeOptions({strategy: 'excludeAll'})
