@@ -32,13 +32,22 @@ export class ProfilesService {
             .getOne();
 
         // Get like contact from just liked account
-        const pairContact = await this.contactRepository.createQueryBuilder('c')
-            .select('c.type')
-            .innerJoin(Contact, 'cc', 'cc.fromUserId = c.toUserId AND cc.toUserId = c.fromUserId AND cc.type = c.type')
-            .where({fromUser: profile, toUser: forUser, type: ContactType.LIKE})
-            .getOne();
+        const contacts = await this.contactRepository.createQueryBuilder('c')
+            .where({fromUser: forUser, toUser: profile, type: ContactType.LIKE})
+            .orWhere({fromUser: profile, toUser: forUser, type: ContactType.LIKE})
+            .getMany();
 
-        profile.isPair = pairContact !== undefined;
+        let [outLike, inLike] = [false, false];
+        contacts.forEach(contact => {
+            if (contact.fromUserId === forUser.id) {
+                outLike = true;
+            } else if (contact.toUserId === forUser.id) {
+                inLike = true;
+            }
+        });
+
+        profile.isLiked = outLike;
+        profile.isPair = outLike && inLike;
 
         return profile;
     }

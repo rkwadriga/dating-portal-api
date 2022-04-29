@@ -60,6 +60,8 @@ export class User {
 
     public avatarPhoto?: Photo;
 
+    public isLiked = false;
+
     public isPair = false;
 
     public setAvatar(photo: Photo) {

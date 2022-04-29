@@ -7,6 +7,9 @@ export class ProfileInfoDto extends BaseDto {
     photos: string[] = [];
 
     @Expose()
+    isLiked = false;
+
+    @Expose()
     isPair = false;
 
     constructor(user: User) {
@@ -25,6 +28,7 @@ export class ProfileInfoDto extends BaseDto {
             }
         }
 
+        this.isLiked = user.isLiked;
         this.isPair = user.isPair;
     }
 }

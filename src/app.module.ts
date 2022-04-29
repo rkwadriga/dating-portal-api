@@ -16,6 +16,7 @@ import { User } from "./auth/user.entity";
 import { SocketService } from "./service/socket.service";
 import { ChatGateway } from "./chat/chat.gateway";
 import { FileSystemService } from "./service/fileSystem.service";
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
     imports: [
@@ -27,6 +28,7 @@ import { FileSystemService } from "./service/fileSystem.service";
         }),
         TypeOrmModule.forRootAsync({useFactory: ormConfig}),
         TypeOrmModule.forFeature([User, Message]),
+        ScheduleModule.forRoot(),
         AuthModule,
         ProfileModule,
         DatingModule,
