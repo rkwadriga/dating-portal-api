@@ -8,8 +8,10 @@ export const DATE_FORMAT = 'Y-m-d';
 
 export const monthsNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-export const toDate = (time: Date | string | null): Date => {
+export const toDate = (time: Date | string | number | null): Date => {
     if (typeof time === 'string') {
+        return new Date(time);
+    } else if (typeof time === 'number') {
         return new Date(time);
     } else if (time === null) {
         return new Date();
@@ -36,7 +38,7 @@ export const getDatesDiff = (from: Date | string, to: Date | string | null = nul
     return toDate(to).valueOf() - toDate(from).valueOf();
 }
 
-export const yearsFromDate = (date: Date | string | null): number => {
+export const yearsFromDate = (date: Date | string | number | null): number => {
     if (date === null) {
         return 0;
     }
@@ -87,7 +89,7 @@ export const yearsFromDate = (date: Date | string | null): number => {
     return yearsDiff - 1;
 }
 
-export const formatDate = (date: Date | string | null = null, format: string | null = null): string => {
+export const formatDate = (date: Date | string | number | null = null, format: string | null = null): string => {
     date = toDate(date);
     if (format === null) {
         format = DATETIME_FORMAT;
@@ -208,7 +210,7 @@ export const formatDate = (date: Date | string | null = null, format: string | n
     return result;
 }
 
-export const addYears = (years: number, date: Date | string | null = null): Date => {
+export const addYears = (years: number, date: Date | string | number | null = null): Date => {
     const stringDate = toDate(date).toString();
     const match = stringDate.match(DATETIME_FULL_FORMAT_PATTERN);
     if (match === null) {
@@ -219,7 +221,7 @@ export const addYears = (years: number, date: Date | string | null = null): Date
     return new Date(year > 0 ? stringDate.replace(DATETIME_FULL_FORMAT_PATTERN, `$1 ${year} $3`) : null);
 }
 
-export const addMonths = (moths: number, date: Date | string | null = null): Date => {
+export const addMonths = (moths: number, date: Date | string | number | null = null): Date => {
     const pattern = /(\w+) \w+ (\d+) \d+ ([\w\d: +\(\)]+)/;
     date = toDate(date);
     const matches = date.toString().match(pattern);
@@ -251,23 +253,23 @@ export const addMonths = (moths: number, date: Date | string | null = null): Dat
     return new Date(date.toString().replace(pattern, `$1 ${newMoth} $2 ${newYear} $3`));
 }
 
-export const addDays = (days: number, date: Date | string | null = null): Date => {
+export const addDays = (days: number, date: Date | string | number | null = null): Date => {
     return addHours(days * 24, date);
 }
 
-export const addHours = (hours: number, date: Date | string | null = null): Date => {
+export const addHours = (hours: number, date: Date | string | number | null = null): Date => {
     return addMinutes(hours * 60, date);
 }
 
-export const addMinutes = (minutes: number, date: Date | string | null = null): Date => {
+export const addMinutes = (minutes: number, date: Date | string | number | null = null): Date => {
     return addSeconds(minutes * 60, date);
 }
 
-export const addSeconds = (seconds: number, to: Date | string | null = null): Date => {
+export const addSeconds = (seconds: number, to: Date | string | number | null = null): Date => {
     return new Date(toDate(to).valueOf() + seconds * 1000);
 }
 
-export const addPeriod = (period: string, to: Date | string | null = null): Date => {
+export const addPeriod = (period: string, to: Date | string | number | null = null): Date => {
     let date = toDate(to);
     const matches = period.toLowerCase().match(/([-]*)[ ]*(\d+)[ ]*(second|minute|hour|day|week|month|year)/);
     if (matches === null) {

@@ -17,6 +17,7 @@ import { SocketService } from "./service/socket.service";
 import { ChatGateway } from "./chat/chat.gateway";
 import { FileSystemService } from "./service/fileSystem.service";
 import { ScheduleModule } from '@nestjs/schedule';
+import { SecurityService } from "./service/security.service";
 
 @Module({
     imports: [
@@ -36,7 +37,15 @@ import { ScheduleModule } from '@nestjs/schedule';
         DialogModule
     ],
     controllers: [AppController],
-    providers: [AppService, LoggerService, DialogService, SocketService, ChatGateway, FileSystemService],
+    providers: [
+        AppService,
+        LoggerService,
+        DialogService,
+        SocketService,
+        ChatGateway,
+        FileSystemService,
+        SecurityService
+    ],
 })
 export class AppModule {
 }

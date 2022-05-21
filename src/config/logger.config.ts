@@ -10,6 +10,7 @@ export enum LogsPaths {
     DATING,
     DIALOG,
     RATING,
+    SECURITY,
 }
 
 export const loggerConfig = {
@@ -53,6 +54,10 @@ export const loggerConfig = {
         [LogsPaths.RATING]: {
             info: 'rating/info.log',
             error: 'rating/error.log',
+        },
+        [LogsPaths.SECURITY]: {
+            info: 'security/info.log',
+            error: 'security/error.log',
         }
     },
     fileSize: '2MB',

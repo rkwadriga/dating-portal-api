@@ -17,21 +17,36 @@ import { createReadStream } from 'fs';
 import { join } from 'path';
 import { LoggerService } from "../service/logger.service";
 import { LogsPaths } from "../config/logger.config";
+import { SecurityService } from "../service/security.service";
+import { SecurityException } from "../exceptions/security.exception";
 
 @Controller('/public')
 export class PublicController {
     constructor (
         private readonly fileSystem: FileSystemService,
         private readonly imageService: ImageService,
+        private readonly security: SecurityService,
         private readonly logger: LoggerService
     ) {}
 
-    @Get('/img/:userID/:path?/:size?')
+    @Get('/img/:data/:sign/:path?/:size?')
     public async getImage(
-        @Param('userID') userID: string,
+        @Param('data') data: string,
+        @Param('sign') sign: string,
         @Param('path') path: string,
         @Param('size') size?: string
     ) {
+        let userID;
+        try {
+            userID = this.security.checkSignature(data, sign).userID;
+        } catch (e) {
+            if (e instanceof SecurityException) {
+                const requestData = {data, sign, path, size};
+                this.logger.error(`Invalid signature given on "/public/img" request: ${JSON.stringify(requestData)}`, LogsPaths.SECURITY);
+                throw new BadRequestException('Invalid signature');
+            }
+        }
+
         let filePath: string;
         if (path === process.env.DEFAULT_AVATAR_FILE_NAME) {
             filePath = await this.fileSystem.getDefaultAvatar(userID);
