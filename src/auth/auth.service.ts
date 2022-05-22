@@ -12,9 +12,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { Profile } from "../profile/profile.entity";
 import { Settings } from "../profile/settings.entity";
 import { Rating } from "../profile/rating.entity";
-import { LoggerService } from "../service/logger.service";
+import { LoggerService, LogsPaths } from "../service/logger.service";
 import { AuthException, AuthExceptionCodes } from "../exceptions/auth.exception";
-import { LogsPaths } from "../config/logger.config";
 
 export const hashPassword = async (password: string): Promise<string> => {
     return await bcrypt.hash(password, 10);
@@ -34,7 +33,9 @@ export class AuthService {
         private readonly ratingRepository: Repository<Rating>,
         private readonly jwtService: JwtService,
         private readonly logger: LoggerService
-    ) {}
+    ) {
+        this.logger.setPath(LogsPaths.AUTH);
+    }
 
     public async createUser(input: CreateUserDto): Promise<User> {
         let errors: Array<string> = [];
@@ -97,7 +98,7 @@ export class AuthService {
             throw new AuthException(`Can not create user: ${e.message}`, AuthExceptionCodes.CREATE_ERROR);
         } finally {
             await queryRunner.release();
-            this.logger.info('New user created', LogsPaths.AUTH, user);
+            this.logger.info('New user created', user);
         }
 
         return user;

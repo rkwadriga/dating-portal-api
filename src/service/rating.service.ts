@@ -1,12 +1,11 @@
 import { Injectable } from "@nestjs/common";
-import { LoggerService } from "./logger.service";
+import { LoggerService, LogsPaths } from "./logger.service";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Contact, ContactType } from "../dating/contact.entity";
 import { Repository } from "typeorm";
 import { Rating } from "../profile/rating.entity";
 import { ratingConfig } from "../config/rating.config";
 import { addPeriod, formatDate } from "../helpers/time.helper";
-import { LogsPaths } from "../config/logger.config";
 
 @Injectable()
 export class RatingService {
@@ -18,10 +17,12 @@ export class RatingService {
         @InjectRepository(Rating)
         private readonly ratingRepository: Repository<Rating>,
         private readonly logger: LoggerService
-    ) { }
+    ) {
+        this.logger.setPath(LogsPaths.RATING);
+    }
 
     public async calculate(): Promise<void> {
-        this.logger.info('Start calculating ratings', LogsPaths.RATING);
+        this.logger.info('Start calculating ratings');
 
         // Get not updated for some period ratings
         const fromDate = addPeriod(this.calculatingTimePeriod);
@@ -30,11 +31,11 @@ export class RatingService {
             .getMany();
 
         if (ratings.length === 0) {
-            this.logger.info(`There is no rating not updated from ${formatDate(fromDate)} fround. Exit`, LogsPaths.RATING);
+            this.logger.info(`There is no rating not updated from ${formatDate(fromDate)} fround. Exit`);
             return;
         }
 
-        this.logger.info(`Found ${ratings.length} ratings not updated from ${formatDate(fromDate)}`, LogsPaths.RATING);
+        this.logger.info(`Found ${ratings.length} ratings not updated from ${formatDate(fromDate)}`);
         const currentDate = new Date();
         let updatedCount = 0;
         for (let i = 0; i < ratings.length; i++) {
@@ -76,10 +77,10 @@ export class RatingService {
                 await this.ratingRepository.save(rating);
                 updatedCount++;
             } catch (e) {
-                this.logger.error(`Can not update rating for user #${rating.userId}: ${e.message}`, LogsPaths.RATING, rating);
+                this.logger.error(`Can not update rating for user #${rating.userId}: ${e.message}`, {rating});
             }
         }
 
-        this.logger.info(`Done. Updated ${updatedCount} ratings`, LogsPaths.RATING);
+        this.logger.info(`Done. Updated ${updatedCount} ratings`);
     }
 }

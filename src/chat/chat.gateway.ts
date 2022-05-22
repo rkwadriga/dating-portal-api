@@ -1,9 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import { ConnectionData, SocketService } from "../service/socket.service";
 import { IncomingMessage as WsRequest } from "http";
-import { LoggerService } from "../service/logger.service";
+import { LoggerService, LogsPaths } from "../service/logger.service";
 import { DialogService } from "../dialog/dialog.service";
-import { LogsPaths } from "../config/logger.config";
 
 export interface WsMessage {
     id: string;
@@ -22,6 +21,7 @@ export class ChatGateway {
         private readonly dialogService: DialogService,
         private readonly logger: LoggerService
     ) {
+        this.logger.setPath(LogsPaths.CHAT);
         this.init();
     }
 
@@ -83,10 +83,10 @@ export class ChatGateway {
     }
 
     private logInfo(message: string, context?: any) {
-        this.logger.info(message, LogsPaths.CHAT, context);
+        this.logger.info(message, context);
     }
 
     private logError(message: string, context?: any) {
-        this.logger.error(message, LogsPaths.CHAT, context);
+        this.logger.error(message, context);
     }
 }

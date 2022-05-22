@@ -6,7 +6,6 @@ import { Photo } from "../profile/photo.entity";
 import { Settings } from "../profile/settings.entity";
 import { Contact, ContactType } from "./contact.entity";
 import { addYears, DATE_FORMAT, formatDate } from "../helpers/time.helper";
-import { LoggerService } from "../service/logger.service";
 
 @Injectable()
 export class ProfilesService {
@@ -18,8 +17,7 @@ export class ProfilesService {
         @InjectRepository(Settings)
         private readonly settingsRepository: Repository<Settings>,
         @InjectRepository(Contact)
-        private readonly contactRepository: Repository<Contact>,
-        private readonly logger: LoggerService
+        private readonly contactRepository: Repository<Contact>
     ) {}
 
     public async getProfileInfoByUuid(uuid: string, forUser: User): Promise<User | null> {

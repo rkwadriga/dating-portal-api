@@ -19,8 +19,7 @@ import { User } from  "../auth/user.entity";
 import { ProfileInfoDto } from  "./output/profile.info.dto";
 import { DatingService } from  "./dating.service";
 import { DatingException, DatingExceptionCodes } from  "../exceptions/dating.exception";
-import { LoggerService } from  "../service/logger.service";
-import { LogsPaths } from  "../config/logger.config";
+import { LoggerService, LogsPaths } from  "../service/logger.service";
 import { RatingService } from "../service/rating.service";
 
 @Controller('/api/dating/profiles')
@@ -31,7 +30,9 @@ export class ProfilesController {
         private readonly datingService: DatingService,
         private readonly logger: LoggerService,
         private readonly ratingService: RatingService
-    ) {}
+    ) {
+        this.logger.setPath(LogsPaths.PROFILE);
+    }
 
     @Get('/next')
     @UseGuards(AuthGuardJwt)
@@ -59,7 +60,7 @@ export class ProfilesController {
         this.ratingService.calculate();
         const profile = await this.profilesService.getProfileInfoByUuid(id, user);
         if (!profile) {
-            this.logger.error(`Profile nut found by uuid: "${id}"`, LogsPaths.PROFILE);
+            this.logger.error(`Profile nut found by uuid: "${id}"`);
             throw new NotFoundException(`Profile not found`);
         }
 
@@ -73,7 +74,7 @@ export class ProfilesController {
         try {
             isPair = await this.datingService.like(user, id);
         } catch (e) {
-            this.logger.error(`Can not like pair "${id}": ${e.message}`, LogsPaths.PROFILE);
+            this.logger.error(`Can not like pair "${id}": ${e.message}`);
             if (e instanceof DatingException && e.code === DatingExceptionCodes.PAIR_NOT_FOUND) {
                 throw new NotFoundException(`User ${id} not found`);
             } else {

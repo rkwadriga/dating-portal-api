@@ -1,26 +1,41 @@
 import { Injectable } from "@nestjs/common";
-import { LogsPaths, loggerConfig } from "../config/logger.config";
+import { loggerConfig } from "../config/logger.config";
 import { str2Bytes } from "../helpers/number.helper";
 import { FileSystemService } from "./fileSystem.service";
 import { formatDate } from "../helpers/time.helper";
+import { LogsPathsEnum } from "../config/logger.config";
+
+export const LogsPaths = LogsPathsEnum;
 
 @Injectable()
 export class LoggerService {
     private config = loggerConfig;
+    private path = LogsPathsEnum.SYSTEM;
 
     constructor(
         private readonly fileSystem: FileSystemService
     ) { }
 
-    public info (msg: string, path = LogsPaths.SYSTEM, context?: any) {
+    public setPath(path: LogsPathsEnum): void {
+        this.path = path;
+    }
+
+    public info (msg: string, path: LogsPathsEnum|object|null = null, context?: any) {
         this.writeMessage('info', path, msg, context);
     }
 
-    public error (msg: string, path = LogsPaths.SYSTEM, context?: any) {
-        this.writeMessage('info', path, msg, context);
+    public error (msg: string, path: LogsPathsEnum|object|null = null, context?: any) {
+        this.writeMessage('error', path, msg, context);
     }
 
-    private writeMessage (level: string, path: LogsPaths, msg: string, context: any) {
+    private writeMessage (level: string, path: LogsPathsEnum|object|null = null, msg: string, context: any) {
+        if (typeof path === 'object') {
+            context = path;
+            path = this.path;
+        } else if (path === null) {
+            path = this.path;
+        }
+
         let message = formatDate() + ' ' + msg;
         if (context !== undefined) {
             if (typeof context !== 'string') {
@@ -33,7 +48,7 @@ export class LoggerService {
         console.log(message);
     }
 
-    private getLogFile(level: string, logPath: LogsPaths): string {
+    private getLogFile(level: string, logPath: LogsPathsEnum): string {
         let file = this.config.files[logPath][level];
         if (file === undefined) {
             file = this.config.files[logPath].info.replace('info', level);

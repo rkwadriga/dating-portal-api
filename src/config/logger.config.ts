@@ -1,5 +1,4 @@
-
-export enum LogsPaths {
+export enum LogsPathsEnum {
     SYSTEM,
     AUTH,
     ACCOUNT,
@@ -15,47 +14,47 @@ export enum LogsPaths {
 
 export const loggerConfig = {
     files: {
-        [LogsPaths.SYSTEM]: {
+        [LogsPathsEnum.SYSTEM]: {
             info: 'system/info.log',
             error: 'system/error.log',
         },
-        [LogsPaths.AUTH]: {
+        [LogsPathsEnum.AUTH]: {
             info: 'auth/info.log',
             error: 'auth/error.log',
         },
-        [LogsPaths.ACCOUNT]: {
+        [LogsPathsEnum.ACCOUNT]: {
             info: 'account/info.log',
             error: 'account/error.log',
         },
-        [LogsPaths.SOCKET]: {
+        [LogsPathsEnum.SOCKET]: {
             info: 'socket/info.log',
             error: 'socket/error.log',
         },
-        [LogsPaths.CHAT]: {
+        [LogsPathsEnum.CHAT]: {
             info: 'chat/info.log',
             error: 'chat/error.log',
         },
-        [LogsPaths.PROFILE]: {
+        [LogsPathsEnum.PROFILE]: {
             info: 'profile/info.log',
             error: 'profile/error.log',
         },
-        [LogsPaths.PUBLIC]: {
+        [LogsPathsEnum.PUBLIC]: {
             info: 'public/info.log',
             error: 'public/error.log',
         },
-        [LogsPaths.DATING]: {
+        [LogsPathsEnum.DATING]: {
             info: 'dating/info.log',
             error: 'dating/error.log',
         },
-        [LogsPaths.DIALOG]: {
+        [LogsPathsEnum.DIALOG]: {
             info: 'dialog/info.log',
             error: 'dialog/error.log',
         },
-        [LogsPaths.RATING]: {
+        [LogsPathsEnum.RATING]: {
             info: 'rating/info.log',
             error: 'rating/error.log',
         },
-        [LogsPaths.SECURITY]: {
+        [LogsPathsEnum.SECURITY]: {
             info: 'security/info.log',
             error: 'security/error.log',
         }
