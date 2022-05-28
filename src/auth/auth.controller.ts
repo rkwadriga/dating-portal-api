@@ -52,11 +52,9 @@ export class AuthController {
     @UseGuards(AuthGuardLocal)
     @UseInterceptors(ClassSerializerInterceptor)
     async login(@CurrentUser() user: User) {
-        this.logger.info(`User #${user.id} is logged in`);
-        return new UserEntityDto(
-            user,
-            this.authService.getTokenForUser(user)
-        );
+        const token = this.authService.getTokenForUser(user);
+        this.logger.info(`User #${user.id} is logged in`, token);
+        return new UserEntityDto(user, token);
     }
 
     @Put('/refresh')
