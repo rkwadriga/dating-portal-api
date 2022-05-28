@@ -48,8 +48,8 @@ export class AuthService {
         }
 
         // Check the username and email are unique
-        const existingUser = await this.userRepository.findOne({email: input.email});
-        if (existingUser) {
+        const existingUser = await this.getUserByUsername(input.email);
+        if (existingUser !== null) {
             errors.push('This email is already registered');
             status = HttpStatus.CONFLICT;
             error = HttpErrorCodes.CONFLICT;
