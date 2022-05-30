@@ -49,15 +49,16 @@ export class LoggerService {
     }
 
     private getLogFile(level: string, logPath: LogsPathsEnum): string {
+        // Get base log-file
         let file = this.config.files[logPath][level];
         if (file === undefined) {
             file = this.config.files[logPath].info.replace('info', level);
         }
         file = this.fileSystem.getLogsDir() + '/' + file;
-
+        // Read logs dir
         const dir = this.fileSystem.getFileDir(file, true);
         const files = this.fileSystem.scandir(dir);
-
+        // Get last log-file from dir
         let lastFile: string | null = null;
         files.forEach(path => {
             if (path.indexOf(level) === 0) {
@@ -67,23 +68,23 @@ export class LoggerService {
         if (lastFile === null) {
             return this.indexFile(file, 1);
         }
-
+        // If the last file size less then log-file size limit - return it
         if (this.fileSystem.fileSIze(lastFile) < str2Bytes(this.config.fileSize)) {
             return lastFile;
         }
-
+        // If index of the last log-file less then max log-files count - return it
         const lastIndex = this.getFileIndex(lastFile);
         if (lastIndex < this.config.filesCount) {
             return this.indexFile(file, lastIndex + 1);
         }
-
+        // Delete the first log-file adn decrement indexes of other
         this.fileSystem.delete(this.indexFile(file, 1));
-        files.forEach(filePath => {
-            const newIndex = this.getFileIndex(filePath) - 1;
-            this.fileSystem.rename(dir + '/' + filePath, this.indexFile(file, newIndex));
+        let newIndex = 1;
+        files.forEach(fileName => {
+            this.fileSystem.rename(dir + '/' + fileName, this.indexFile(file, newIndex++));
         });
-
-        return this.indexFile(file, this.config.filesCount);
+        // Return log-file with the maximum index
+        return this.indexFile(file, newIndex);
     }
 
     private indexFile(file: string, index: number): string {
