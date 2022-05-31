@@ -92,14 +92,14 @@ export class ImageService {
 
     private getSizedPath(path: string, size: string, prefix = '-'): string {
         const pattern = RegExp(`^(.+)\\.(${this.allowedExtensions.join('|')})$`);
-        if (!path.match(pattern)) {
+        if (!pattern.test(path)) {
             throw new FileSystemException(`Invalid original file path: ${path}`, FileSystemExceptionCodes.INVALID_PATH);
         }
         return path.replace(pattern, `$1${prefix}${size}.$2`);
     }
 
     private checkSize(size: string): void {
-        if (!size.match(/^\d+x\d+$/)) {
+        if (!/^\d+x\d+$/.test(size)) {
             throw new ImageException(`Invalid size format: "${size}"`, ImageExceptionCodes.INVALID_SIZE);
         }
         if (!inArray(size, this.allowedSizes)) {

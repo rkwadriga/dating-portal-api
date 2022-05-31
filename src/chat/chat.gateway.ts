@@ -78,7 +78,7 @@ export class ChatGateway {
     }
 
     private static getClientID(request: WsRequest): string | null {
-        const matches = request.url.match(/client=([\w\d-]+)/);
+        const matches = request.url.match(/client=([\w-]+)/);
         return matches[1] ?? null;
     }
 

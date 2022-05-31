@@ -64,7 +64,7 @@ export class SecurityService {
         };
         Object.keys(replacements).forEach(key => {
             const pattern = RegExp(`(\\d+)${key}`);
-            if (this.signatureLifeTime.match(pattern)) {
+            if (pattern.test(this.signatureLifeTime)) {
                 this.signatureLifeTime = this.signatureLifeTime.replace(pattern, `$1 ${replacements[key]}`);
             }
         });

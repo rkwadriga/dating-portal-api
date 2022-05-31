@@ -1,5 +1,5 @@
 export const str2Bytes = (str: string): number => {
-    const match = str.match(/(\d+)[ ]*(b|B|kb|Kb|KB|kB|mb|Mb|MB|mB|gb|Gb|GB|gB|tb|Tb|TB|tB)/);
+    const match = str.match(/(\d+)\s*(b|kb|mb|gb|tb)/i);
     if (match === null) {
         return 0;
     }
