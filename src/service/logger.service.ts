@@ -37,7 +37,7 @@ export class LoggerService {
         }
 
         let message = formatDate() + ' ' + msg;
-        if (context !== undefined) {
+        if (context) {
             if (typeof context !== 'string') {
                 context = JSON.stringify(context);
             }
