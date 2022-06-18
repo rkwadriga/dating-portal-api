@@ -43,7 +43,7 @@ export class SecurityService {
         // Check signature value
         const secretStr = `<!--time:${timeVal}&secret:${this.secret}&user:${userID}&-->`;
         if (SHA256(secretStr).toString() !== signature) {
-            throw new SecurityException(`Signature is expired`, SecurityExceptionCodes.INVALID_SIGNATURE);
+            throw new SecurityException(`Invalid signature`, SecurityExceptionCodes.INVALID_SIGNATURE);
         }
 
         return {
